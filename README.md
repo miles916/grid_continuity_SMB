@@ -15,7 +15,7 @@ Other dependencies are included in /code
 
 ### Installing
 
-Simply clone the repository, then adjust the master_FluxCalcsSimple.m script to get going. Example data are included for Matanuska and Rongbuk Glaciers.
+Simply clone the repository, then adjust the master_FluxCalcsSimple.m script to get going. Example data are included for Matanuska and Rongbuk Glaciers. Ensure that input velocity data (dx, dy) are relative to their coordinate system.
 
 ## Authors
 
@@ -28,4 +28,4 @@ Simply clone the repository, then adjust the master_FluxCalcsSimple.m script to 
 Currently under private development.
 
 ## Acknowledgments
-*Thanks to [ColorBrewer](http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) for their development of improved color ramps; here implemented with a [FileExchenage script](https://ch.mathworks.com/matlabcentral/fileexchange/34087-cbrewer-colorbrewer-schemes-for-matlab).
+*Thanks to [ColorBrewer](http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) for their development of improved color ramps; here implemented with a [FileExchange script](https://ch.mathworks.com/matlabcentral/fileexchange/34087-cbrewer-colorbrewer-schemes-for-matlab).
