@@ -208,13 +208,31 @@ end
     N.z2fdiv = zonal_aggregate(N.zones,N.FDIV); %simply aggregates values in the zone - FAST simple mean; not quite robust but produces the same value as a perimeter integration (good...)
     N.z2DH = zonal_aggregate(N.zones,N.DH); %simply aggregates values in the zone - FAST
 
-     %% SMB and uncertainty
+    %% density corrections
+    N.Qdensity = 0.9; %900 kg m3 everywhere
+    N.Hdensity = 0.9.*N.MASK; %initial value everywhere of 900kg m3
     
-    N.SMB = N.DH-N.FDIV;
-    N.SMB(N.MASK==0)=NaN;
-
-    N.SMBz2 = N.z2DH-N.z2fdiv;
-
+%     %zonal implementation
+%     ind1=(N.z2fdiv>0); %positive emergence
+%     ind2=(N.z2DH>0); %thickening
+%     ind3=(abs(N.z2DH)>abs(N.z2fdiv)); %elevation change greater than fdiv
+    
+    %grid implementation
+    ind1=(N.FDIV>0); 
+    ind2=(N.DH>0);
+    ind3=(abs(N.DH)>abs(N.FDIV));
+    
+    N.Hdensity(ind1&~ind2)=0.9; %thinning and emergence = melt
+    N.Hdensity(~ind1&ind2)=0.6; %thickening and submergence = acc
+    N.Hdensity(ind1&ind2&ind3)=0.6; %emergence and thickening, more thickening - acc
+    N.Hdensity(ind1&ind2&~ind3)=0.85; %emergence and thickening, more thickening - mixed
+    N.Hdensity(~ind1&~ind2&ind3)=0.9; %submergence and thinning, more thinning - melt
+    N.Hdensity(~ind1&~ind2&~ind3)=0.85; %submergence and thinning, less thinning - mixed
+   
+     %% SMB
+    
+    N.SMB = N.Hdensity.*N.DH-N.Qdensity.*N.FDIV;
+    N.SMBz2= zonal_aggregate(N.zones,N.SMB); %aggregates values in the zone
 
     %mask before plotting
     N.DH((N.MASK==0))=NaN;
@@ -279,6 +297,15 @@ if plotouts==1
     colorbar;colormap(cmap)
     title(Ntitle)
     caxis([-5,5])
+    saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+    %
+    Nout = 'grid-Hdensity'
+    Ntitle = [Nout ' (1000 km m^{-3}), ' outtitle1];
+    figure
+    imagesc((N.Hdensity))
+    colorbar;
+    title(Ntitle)
+    caxis([.5,1])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
     Nout = 'thx'
