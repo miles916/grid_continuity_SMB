@@ -1,7 +1,7 @@
 clear 
 close all
 
-homedir = '\\wsl.ch\fe\gebhyd\1_Alle\3_Projekte\HIMAL\Personal_folders\Evan\flux_thickness_iteration';
+homedir = '\\wsl.ch\fe\gebhyd\8_Him\Personal_folders\Evan\flux_thickness_iteration'; %EACH USER TO UPDATE
 addpath(genpath([homedir '\code']))
 
 plotouts=1; %output plots or not
@@ -29,14 +29,14 @@ switch Glacier
         segdist = 300;
         V.Vmult=1; % velocity axes in correct direction
     case 'Matanuska'
-        V.pathx = fullfile(homedir,'data',Glacier,'DxDtf_UTM06V_V001_G240C016128T010S_A2015.tif');
-        V.pathy = fullfile(homedir,'data',Glacier,'DyDtf_UTM06V_V001_G240C016128T010S_A2015.tif');
+        V.pathx = fullfile(homedir,'data',Glacier,'Vx_Matanuska_ITSLIVE.tif');
+        V.pathy = fullfile(homedir,'data',Glacier,'Vy_Matanuska_ITSLIVE.tif');
         DH.path = fullfile(homedir,'data',Glacier,'dhdt_Matanuska_2007_2016.tif');
         THX.path = fullfile(homedir,'data',Glacier,'RGI60-01.10557_thickness_composite.tif');
         THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-01.10557_HF2012.tif');
         DEM.path = fullfile(homedir,'data',Glacier,'GDEM_Matanuska.tif');
-        segdist=1000;
-        V.Vmult=-1; % velocity y-axis reversed to grid direction
+        segdist=2000;
+        V.Vmult=1; % velocity y-axis reversed to grid direction
 end
 
 
@@ -68,9 +68,14 @@ end
     V.yp=1:V.info.Height;
     [V.xm,~] = pix2map(V.R,ones(size(V.xp)),V.xp);
     [~,V.ym] = pix2map(V.R,V.yp,ones(size(V.yp)));
-    [V.PixelRegion,V.LatG,V.LonG] = subset_geo(V.info,BBoxLL);
+    [V.PixelRegion,V.LatG,V.LonG,V.xmG,V.ymG] = subset_geo(V.info,BBoxLL);
     V.Uraw=imread(V.pathx,'PixelRegion',V.PixelRegion);
     V.Vraw=imread(V.pathy,'PixelRegion',V.PixelRegion).*V.Vmult;
+    
+    %calculate velocity end-points
+    V.xm2=V.xmG+double(V.Uraw); %velocity vector end-point
+    V.ym2=V.ymG+double(V.Vraw); %velocity vector end-point
+    [V.Lat2,V.Lon2]=projinv(V.info,V.xm2(:),V.ym2(:)); %unprojected velocity vector end-point
     
     %identify likely errors
     iERR=(abs(V.Uraw)>400)|(abs(V.Vraw)>400);
@@ -120,9 +125,13 @@ end
 
     %resample velocity data
     [V.xN,V.yN] = projfwd(THX.info,V.LatG(:),V.LonG(:)); %compute projected coordinates
+    [V.x2N,V.y2N] = projfwd(THX.info,V.Lat2(:),V.Lon2(:)); %compute projected coordinates for vector end-points
     V.xN(iERR)=[];V.yN(iERR)=[];
-    V.Uraw2=V.Uraw(:);V.Uraw2(iERR)=[];
-    V.Vraw2=V.Vraw(:);V.Vraw2(iERR)=[];
+    V.x2N(iERR)=[];V.y2N(iERR)=[];
+%     V.Uraw2=V.Uraw(:);V.Uraw2(iERR)=[]; %OLD
+%     V.Vraw2=V.Vraw(:);V.Vraw2(iERR)=[]; %OLD
+    V.Uraw2=V.x2N-V.xN; %velocity vector in new coord system
+    V.Vraw2=V.y2N-V.yN; %velocity vector in new coord system
     N.U = griddata(V.xN(:),V.yN(:),double(V.Uraw2(:)),N.x3g(:),N.y3g(:),'cubic');
     N.U = reshape(N.U,size(N.x3g));
     N.V = griddata(V.xN(:),V.yN(:),double(V.Vraw2(:)),N.x3g(:),N.y3g(:),'cubic');
@@ -228,6 +237,7 @@ if plotouts==1
     title(Ntitle)
 %     caxis([-5,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+    
     %
     Nout = 'EL-zone-avg-emergence'
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
