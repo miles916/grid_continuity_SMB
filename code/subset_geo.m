@@ -1,4 +1,4 @@
-function [PixelRegion,LatG,LonG] = subset_geo(info,BBoxLL)
+function [PixelRegion,LatG,LonG,xmG1,ymG1] = subset_geo(info,BBoxLL)
 
 xp = [1:info.Width];
 yp = [1:info.Height]; %pixel coordinates are cell centers
@@ -29,3 +29,6 @@ n=xe-x1+1;
 
 LatG=reshape(LatG1(LatReg&LonReg),m,n);
 LonG=reshape(LonG1(LatReg&LonReg),m,n);
+
+xmG1=xmG(y1:ye,x1:xe);
+ymG1=ymG(y1:ye,x1:xe);
