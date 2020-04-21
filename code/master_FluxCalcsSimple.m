@@ -7,9 +7,10 @@ addpath(genpath([homedir '\code']))
 
 plotouts=1; %output plots or not
 exports=1; %save geotiffs or not
-DX = 200; %resolution to run calculations at 
+DX = 100; %resolution to run calculations at 
 % Glacier = 'Rongbuk'
-Glacier = 'Matanuska'
+% Glacier = 'Matanuska'
+Glacier = 'Aletsch'
 datatitle = ['test_' Glacier];
 
 
@@ -28,16 +29,24 @@ switch Glacier
         THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-15.09991_HF2012.tif');
         DEM.path = fullfile(homedir,'data',Glacier,'15.09991_AW3D.tif');
         segdist = 300;
-        V.Vmult=1; % velocity axes in correct direction
+        V.filter=0; %swtich to smooth velocity data or not
     case 'Matanuska'
         V.pathx = fullfile(homedir,'data',Glacier,'Vx_Matanuska_ITSLIVE.tif');
         V.pathy = fullfile(homedir,'data',Glacier,'Vy_Matanuska_ITSLIVE.tif');
         DH.path = fullfile(homedir,'data',Glacier,'dhdt_Matanuska_2007_2016.tif');
-        THX.path = fullfile(homedir,'data',Glacier,'RGI60-01.10557_thickness_composite.tif');
+%         THX.path = fullfile(homedir,'data',Glacier,'RGI60-01.10557_thickness_composite.tif');
         THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-01.10557_HF2012.tif');
         DEM.path = fullfile(homedir,'data',Glacier,'GDEM_Matanuska.tif');
         segdist=2000;
-        V.Vmult=1; % velocity y-axis reversed to grid direction
+        V.filter=0; %swtich to smooth velocity data or not
+    case 'Aletsch'
+        V.pathx = fullfile(homedir,'data',Glacier,'v_mean-x_(ma-1)_winter_2011-2017.tiff');
+        V.pathy = fullfile(homedir,'data',Glacier,'v_mean-y_(ma-1)_winter_2011-2017.tiff');
+        DH.path = fullfile(homedir,'data',Glacier,'Aletsch_trim_Trend(2011-2019)_m-per-year_ladfit_10m-geo.tiff');
+        THX.path = fullfile(homedir,'data',Glacier,'RGI60-11.01450_thickness.tif');
+        DEM.path = fullfile(homedir,'data',Glacier,'DEM_aletsch_10m_utm32.tif');
+        segdist=500;
+        V.filter=1; %swtich to smooth velocity data or not
 end
 
 
@@ -76,12 +85,19 @@ end
     [~,V.ym] = pix2map(V.R,V.yp,ones(size(V.yp)));
     [V.PixelRegion,V.LatG,V.LonG,V.xmG,V.ymG] = subset_geo(V.info,BBoxLL);
     V.Uraw=imread(V.pathx,'PixelRegion',V.PixelRegion);
-    V.Vraw=imread(V.pathy,'PixelRegion',V.PixelRegion).*V.Vmult;
+    V.Vraw=imread(V.pathy,'PixelRegion',V.PixelRegion);
+    
+    if V.filter==1
+        V.Uraw=imgaussfilt(V.Uraw,5);
+        V.Vraw=imgaussfilt(V.Vraw,5);
+    end
     
     %calculate velocity end-points
     V.xm2=V.xmG+double(V.Uraw); %velocity vector end-point
     V.ym2=V.ymG+double(V.Vraw); %velocity vector end-point
-    [V.Lat2,V.Lon2]=projinv(V.info,V.xm2(:),V.ym2(:)); %unprojected velocity vector end-point
+    if isempty(V.info.PCS)==0 %if velocity product is projected, reproject the vectors. if not, we assume it to be oriented north and with units of m/a already
+        [V.Lat2,V.Lon2]=projinv(V.info,V.xm2(:),V.ym2(:)); %unprojected velocity vector end-point
+    end
     
     %identify likely errors
     iERR=(abs(V.Uraw)>400)|(abs(V.Vraw)>400);
@@ -136,13 +152,16 @@ end
 
     %resample velocity data
     [V.xN,V.yN] = projfwd(THX.info,V.LatG(:),V.LonG(:)); %compute projected coordinates
-    [V.x2N,V.y2N] = projfwd(THX.info,V.Lat2(:),V.Lon2(:)); %compute projected coordinates for vector end-points
     V.xN(iERR)=[];V.yN(iERR)=[];
-    V.x2N(iERR)=[];V.y2N(iERR)=[];
-%     V.Uraw2=V.Uraw(:);V.Uraw2(iERR)=[]; %OLD
-%     V.Vraw2=V.Vraw(:);V.Vraw2(iERR)=[]; %OLD
-    V.Uraw2=V.x2N-V.xN; %velocity vector in new coord system
-    V.Vraw2=V.y2N-V.yN; %velocity vector in new coord system
+    if isempty(V.info.PCS) %if velocity data has a source projection
+        V.Uraw2=V.Uraw(:);V.Uraw2(iERR)=[]; %OLD
+        V.Vraw2=V.Vraw(:);V.Vraw2(iERR)=[]; %OLD
+    else %geogrpahic - assume values are relative to N and projected!!
+        [V.x2N,V.y2N] = projfwd(THX.info,V.Lat2(:),V.Lon2(:)); %compute projected coordinates for vector end-points
+        V.x2N(iERR)=[];V.y2N(iERR)=[];
+        V.Uraw2=V.x2N-V.xN; %velocity vector in new coord system
+        V.Vraw2=V.y2N-V.yN; %velocity vector in new coord system
+    end
     N.U = griddata(V.xN(:),V.yN(:),double(V.Uraw2(:)),N.x3g(:),N.y3g(:),'cubic');
     N.U = reshape(N.U,size(N.x3g));
     N.V = griddata(V.xN(:),V.yN(:),double(V.Vraw2(:)),N.x3g(:),N.y3g(:),'cubic');
@@ -251,6 +270,8 @@ end
 %%
 if plotouts==1
     cmap = cbrewer('div','RdBu',21);
+    
+    cmap2 = [flipud(cbrewer('seq','Reds',11));cbrewer('seq','Blues',5)];
 % cmap = [0,0,0;cbrewer('div','RdBu',21);0,0,0];
 
     Nout = 'grid-emergence'
@@ -259,7 +280,7 @@ if plotouts==1
     imagesc(N.FDIV)
     colorbar;colormap(flipud(cmap))
     title(Ntitle)
-    caxis([-5,5])
+    caxis([-10,10])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
     Nout = 'EL-zones'
@@ -285,18 +306,18 @@ if plotouts==1
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.DH)
-    colorbar;colormap(cmap)
+    colorbar;colormap(cmap2)
     title(Ntitle)
-    caxis([-5,5])
+    caxis([-10,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
     Nout = 'grid-SMB'
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.SMB)
-    colorbar;colormap(cmap)
+    colorbar;colormap(cmap2)
     title(Ntitle)
-    caxis([-5,5])
+    caxis([-10,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
     Nout = 'grid-Hdensity'
@@ -321,9 +342,9 @@ if plotouts==1
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.SMBz2)
-    colorbar;colormap(cmap)
+    colorbar;colormap(cmap2)
     title(Ntitle)
-    caxis([-5,5])
+    caxis([-10,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
     %
@@ -351,7 +372,7 @@ end
     ylabel('SMB m/a')
     ylim([-20,10])    
     title(Ntitle)
-    legend('hybrid zonal SMB','zonal SMB','elevation fluxes')
+    legend('gridded SMB','zonal SMB','elevation fluxes')
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 %%
     dZ=10;
@@ -379,7 +400,7 @@ end
     ylim([0,3*max(ELfluxes)])
     ylabel('Flux m^3/a')
     title(Ntitle)
-    legend('gridded','hybrid','flux','location','southeast')
+    legend('gridded','zonal','flux','location','southeast')
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     
     %% export 
