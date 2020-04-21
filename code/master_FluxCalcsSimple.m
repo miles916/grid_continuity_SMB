@@ -1,14 +1,14 @@
 clear 
 close all
 
-homedir = '\\wsl.ch\fe\gebhyd\1_Alle\3_Projekte\HIMAL\Personal_folders\Evan\flux_thickness_iteration';
+homedir = 'C:\Users\miles\Documents\GitHub\Flux_thickness_iteration';
 addpath(genpath([homedir '\code']))
 
 plotouts=1; %output plots or not
 exports=1; %save geotiffs or not
-DX = 100; %resolution to run calculations at 
-Glacier = 'Rongbuk'
-% Glacier = 'Matanuska'
+DX = 200; %resolution to run calculations at 
+% Glacier = 'Rongbuk'
+Glacier = 'Matanuska'
 datatitle = ['test_' Glacier];
 
 
@@ -58,6 +58,11 @@ end
     % set initial mask from thickness data
     MASK0 = THX.data>0;
     
+    % filter thickness data
+    THX.dataR=THX.data;
+    THX.data=imgaussfilt(THX.dataR,4);
+    THX.data(MASK0==0)=0;
+    
     BBoxUTM = THX.info.BoundingBox;
     BBoxLL = [min(THX.LonG(MASK0)) min(THX.LatG(MASK0));max(THX.LonG(MASK0)) max(THX.LatG(MASK0))];
     
@@ -96,12 +101,17 @@ end
     DH.data=imread(DH.path,'PixelRegion',DH.PixelRegion);
     
     DH.data2=DH.data;
-    DH.MM=movmean(DH.data,[9 9],'omitnan'); %calc local mean
-    DH.MST=movmean(DH.data,[9 9],'omitnan'); %calc local std
-    DH.MSG = (DH.data-DH.MM)./DH.MST; %stdev from local mean
-    DH.data2(abs(DH.MSG)>2)=NaN; %filter sigma>2
-    DH.dH3=inpaint_nans(DH.data2);
-
+    DH.errthresh1=3.*nanstd(DH.data2(:));
+%     DH.MM=movmean(DH.data,[9 9],'omitnan'); %calc local mean
+%     DH.MST=movmean(DH.data,[9 9],'omitnan'); %calc local std
+%     DH.MSG = (DH.data-DH.MM)./DH.MST; %stdev from local mean
+%     DH.data2(abs(DH.MSG)>2)=NaN; %filter sigma>2
+%     DH.dH3=inpaint_nans(DH.data2);
+    DH.data2(abs(DH.data2)>DH.errthresh1)=NaN;
+    DH.errthresh2=3.*nanstd(DH.data2(:));
+    DH.data2(abs(DH.data2)>DH.errthresh2)=NaN;
+    DH.dH3=imgaussfilt(DH.data2); %smooths dH slightly, expands NaN around bad DH data
+    
     %% REPROJECT ALL (to THX coordinate system)
 
     buffdist = 1000;
@@ -139,10 +149,14 @@ end
     N.DH = griddata(DH.xN(:),DH.yN(:),double(DH.dH3(:)),N.x3g(:),N.y3g(:),'cubic');
     N.DH = reshape(N.DH,size(N.x3g));
 
+    %set mask
     N.MASK = N.THX>0;
 
+    %gap-fill dH
+    N.DH0=N.DH; %unfilled values
+    N.DH(N.MASK)= index_nanfill(N.DH(N.MASK),N.DEM(N.MASK));
+    
     % MASK
-
     N.DH((N.MASK==0))=0;
     N.U((N.MASK==0))=0;
     N.V((N.MASK==0))=0;
