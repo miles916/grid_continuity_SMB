@@ -8,9 +8,9 @@ addpath(genpath([homedir '\code']))
 plotouts=1; %output plots or not
 exports=1; %save geotiffs or not
 DX = 100; %resolution to run calculations at 
-% Glacier = 'Rongbuk'
+Glacier = 'Rongbuk'
 % Glacier = 'Matanuska'
-Glacier = 'Aletsch'
+% Glacier = 'Aletsch'
 datatitle = ['test_' Glacier];
 
 
@@ -29,7 +29,9 @@ switch Glacier
         THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-15.09991_HF2012.tif');
         DEM.path = fullfile(homedir,'data',Glacier,'15.09991_AW3D.tif');
         segdist = 300;
-        V.filter=0; %swtich to smooth velocity data or not
+        V.mult=1; %scale to convert input units to m/a
+        V.filter=0; %switch to smooth velocity data or not
+        dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
     case 'Matanuska'
         V.pathx = fullfile(homedir,'data',Glacier,'Vx_Matanuska_ITSLIVE.tif');
         V.pathy = fullfile(homedir,'data',Glacier,'Vy_Matanuska_ITSLIVE.tif');
@@ -38,15 +40,19 @@ switch Glacier
         THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-01.10557_HF2012.tif');
         DEM.path = fullfile(homedir,'data',Glacier,'GDEM_Matanuska.tif');
         segdist=2000;
+        V.mult=1; %scale to convert input units to m/a
         V.filter=0; %swtich to smooth velocity data or not
+        dhfilter=1; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
     case 'Aletsch'
-        V.pathx = fullfile(homedir,'data',Glacier,'v_mean-x_(ma-1)_winter_2011-2017.tiff');
-        V.pathy = fullfile(homedir,'data',Glacier,'v_mean-y_(ma-1)_winter_2011-2017.tiff');
+        V.pathx = fullfile(homedir,'data',Glacier,'v_mean-x_(md-1)_winter_2011-2017.tiff');
+        V.pathy = fullfile(homedir,'data',Glacier,'v_mean-y_(md-1)_winter_2011-2017.tiff');
         DH.path = fullfile(homedir,'data',Glacier,'Aletsch_trim_Trend(2011-2019)_m-per-year_ladfit_10m-geo.tiff');
         THX.path = fullfile(homedir,'data',Glacier,'RGI60-11.01450_thickness.tif');
         DEM.path = fullfile(homedir,'data',Glacier,'DEM_aletsch_10m_utm32.tif');
         segdist=500;
+        V.mult=365.24; %scale to convert input units to m/a
         V.filter=1; %swtich to smooth velocity data or not
+        dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
 end
 
 
@@ -84,8 +90,8 @@ end
     [V.xm,~] = pix2map(V.R,ones(size(V.xp)),V.xp);
     [~,V.ym] = pix2map(V.R,V.yp,ones(size(V.yp)));
     [V.PixelRegion,V.LatG,V.LonG,V.xmG,V.ymG] = subset_geo(V.info,BBoxLL);
-    V.Uraw=imread(V.pathx,'PixelRegion',V.PixelRegion);
-    V.Vraw=imread(V.pathy,'PixelRegion',V.PixelRegion);
+    V.Uraw=V.mult.*imread(V.pathx,'PixelRegion',V.PixelRegion);
+    V.Vraw=V.mult.*imread(V.pathy,'PixelRegion',V.PixelRegion);
     
     if V.filter==1
         V.Uraw=imgaussfilt(V.Uraw,5);
@@ -122,17 +128,21 @@ end
     [DH.PixelRegion,DH.LatG,DH.LonG] = subset_geo(DH.info,BBoxLL);
     DH.data=imread(DH.path,'PixelRegion',DH.PixelRegion);
     
-    DH.data2=DH.data;
-    DH.errthresh1=3.*nanstd(DH.data2(:));
-%     DH.MM=movmean(DH.data,[9 9],'omitnan'); %calc local mean
-%     DH.MST=movmean(DH.data,[9 9],'omitnan'); %calc local std
-%     DH.MSG = (DH.data-DH.MM)./DH.MST; %stdev from local mean
-%     DH.data2(abs(DH.MSG)>2)=NaN; %filter sigma>2
-%     DH.dH3=inpaint_nans(DH.data2);
-    DH.data2(abs(DH.data2)>DH.errthresh1)=NaN;
-    DH.errthresh2=3.*nanstd(DH.data2(:));
-    DH.data2(abs(DH.data2)>DH.errthresh2)=NaN;
-    DH.dH3=imgaussfilt(DH.data2); %smooths dH slightly, expands NaN around bad DH data
+    if dhfilter==1
+        DH.data2=DH.data;
+        DH.errthresh1=3.*nanstd(DH.data(:));
+    %     DH.MM=movmean(DH.data,[9 9],'omitnan'); %calc local mean
+    %     DH.MST=movmean(DH.data,[9 9],'omitnan'); %calc local std
+    %     DH.MSG = (DH.data-DH.MM)./DH.MST; %stdev from local mean
+    %     DH.data2(abs(DH.MSG)>2)=NaN; %filter sigma>2
+    %     DH.dH3=inpaint_nans(DH.data2);
+        DH.data2(abs(DH.data2)>DH.errthresh1)=NaN;
+        DH.errthresh2=3.*nanstd(DH.data2(:));
+        DH.data2(abs(DH.data2)>DH.errthresh2)=NaN;
+        DH.dH3=imgaussfilt(DH.data2); %smooths dH slightly, expands NaN around bad DH data
+    else
+        DH.dH3=DH.data;
+    end
     
     %% REPROJECT ALL (to THX coordinate system)
 
@@ -195,7 +205,7 @@ end
     % convert velocity to column-averaged
    
     %assume fixed multiplier
-    umult=0.9; %range is [0.8,1], more realistically [0.81,0.99], (uncertainty is ~0.1)
+    umult=0.9; %range is [0.8,1], more realistically [0.81,0.99]
     N.Smean=umult.*N.S;
     N.Umean=umult.*N.U;
     N.Vmean=umult.*N.V;
@@ -240,6 +250,7 @@ end
     ind1=(N.FDIV>0); 
     ind2=(N.DH>0);
     ind3=(abs(N.DH)>abs(N.FDIV));
+    ind4 = N.DEM>median(N.DEM(N.MASK));
     
     N.Hdensity(ind1&~ind2)=0.9; %thinning and emergence = melt
     N.Hdensity(~ind1&ind2)=0.6; %thickening and submergence = acc
@@ -247,6 +258,7 @@ end
     N.Hdensity(ind1&ind2&~ind3)=0.85; %emergence and thickening, more thickening - mixed
     N.Hdensity(~ind1&~ind2&ind3)=0.9; %submergence and thinning, more thinning - melt
     N.Hdensity(~ind1&~ind2&~ind3)=0.85; %submergence and thinning, less thinning - mixed
+    N.Hdensity((ind4==0)&N.MASK)=0.9; %
    
      %% SMB
     
