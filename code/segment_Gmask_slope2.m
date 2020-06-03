@@ -1,74 +1,88 @@
 function zones = segment_Gmask_slope2(DEM,mask,dx,DL)
-% DEM is DEM for whole area
-% mask denotes glacier area
+%segment_Gmask_slope2 - Function to segment a glacier mask into
+%elevation bands spaced at a pseudouniform distance based on the longitudinal surface slope
+%
+% Syntax:  zones = segment_Gmask_slope2(DEM,mask,dx,DL)
+%
+% Inputs:
+%    DEM - Digital Elevation Model for the entire area of analysis
+%    mask - binary raster of glacier area
+%    dx - real-world approximate discretization (in same units as DEM)
+%    DL - desired planimetric length of segments
+%
+% Outputs:
+%    zones - uint16 raster corresponding to the glacier segments
+%
+% Other m-files required: inpaint_nans.m
+%
+% Author: Evan Miles
+% Work address: Swiss Federal Research Institute WSL
+% Email: evan.miles@wsl.ch
+% Sep 2019; Last revision: 03-June-2020
 
-DEM0=DEM;
-
-DEM1 = DEM0;
+%% ------------- BEGIN CODE --------------
+%crop DEM to mask
+DEM1 = DEM;
 DEM1(mask==0)=NaN;
 
+%fill voids in DEM with tensioned-plate interpolation
 DEM2 = inpaint_nans(DEM1,0);
 
+%filter DEM with low-pass gaussian 2x; this removes surface undulations to
+%give something more akin to longitudinal surface gradient
 DEM3 = imgaussfilt(DEM2,2);
 DEM3 = imgaussfilt(DEM3,2);
 
-% mask = isnan(DEM);
-
-DEM = DEM3;
-DEM(mask==0)=NaN;
 
 % [SLO,DIR] = imgradient(DEM./dx);
 [Fx,Fy] = gradient(DEM3);
 SLO = sqrt(Fx.^2+Fy.^2)/dx;
 SLO(mask==0)=NaN;
 
-% %% elevation range 
+% elevation range of denoised DEM
+ELmax = nanmax(DEM3(DEM3(:)>2000));
+ELmin = nanmin(DEM3(DEM3(:)>2000));
+
+% %% find relationship of slope vs elevation and optimal thresholds
+% ELs=ELmin:25:ELmax; %25m segmentation
+% mSLO=0.*ELs;
+% for iEL=1:length(ELs)-1
+%     c=(DEM3<ELs(iEL+1))&(DEM3>=ELs(iEL));
+%     mSLO(iEL)=nanmedian(SLO(c)); %median slope value within each section
+% end
 % 
-ELmax = nanmax(DEM(DEM(:)>2000));
-ELmin = nanmin(DEM((DEM(:)>2000)));
+% % figure;
+% % plot(ELs(1:end-1),mSLO(1:end-1))
 
-%% find slope vs elevation and optimal thresholds
-ELs=ELmin:25:ELmax;
-mSLO=0.*ELs;
+%% set contour intervals for each decile
+ELs = prctile(DEM3(DEM3(:)>0),[0:10:100]); %determine elevation deciles
+
+ELvs=[]; %initialize
 for iEL=1:length(ELs)-1
-    c=(DEM<ELs(iEL+1))&(DEM>=ELs(iEL));
-    mSLO(iEL)=nanmedian(SLO(c));
+    c=(DEM3<ELs(iEL+1))&(DEM3>=ELs(iEL)); %fix domain within decile
+    mSLO(iEL)=nanmedian(SLO(c)); %median slope within each decile
+    cCINT=mSLO(iEL).*DL; %contour interval to give DL as segment distance
+    cELvs = cCINT.*[(ELs(iEL)/cCINT):1:(ELs(iEL+1)/cCINT)]; %new contours within this elevation range
+    ELvs=[ELvs,cELvs]; %add to list
 end
 
-% figure;
-% plot(ELs(1:end-1),mSLO(1:end-1))
-
-%% set contour intervals for each 10-centile
-% ELAest = nanmedian(DEM(DEM(:)>0)); %median elevation
-% ELAest = prctile(DEM(DEM(:)>0),40); %40th centile elevation
-ELs = prctile(DEM(DEM(:)>0),[0:10:100]); %40th centile elevation
-
-% DL=200;
-ELvs=[];
-for iEL=1:length(ELs)-1
-    c=(DEM<ELs(iEL+1))&(DEM>=ELs(iEL));
-    mSLO(iEL)=nanmedian(SLO(c));
-    cCINT=mSLO(iEL).*DL;
-    cELvs = cCINT.*[(ELs(iEL)/cCINT):1:(ELs(iEL+1)/cCINT)];
-    ELvs=[ELvs,cELvs];
-end
-
-zones = zeros(size(DEM));
-%% iterate through zones
+%% iterate through zones and relabel
+zones = zeros(size(DEM)); %intialize
 iZ = 0;
 
-for iEL=2:length(ELvs)
-    cur = (DEM>ELvs(iEL-1))&(DEM<=ELvs(iEL));
-    cur = imfill(cur,'holes');
-    cz = bwlabel(cur); %label each segment individually
+for iEL=2:length(ELvs) 
+    cur = (DEM3>ELvs(iEL-1))&(DEM3<=ELvs(iEL)); %find current semgent
+    cur = imfill(cur,'holes'); %remove any holes if needed
+    cz = bwlabel(cur); %label each segment individually - this gives different values for different tributaries
     cn = max(cz(:)); %number of new zones
-    zones = zones+cz+cur.*iZ;
-    iZ = iZ+cn;
+    
+    zones = zones+cz+cur.*iZ; %label current zones
+    iZ = iZ+cn; %advance index
 end
-zones=uint16(zones);
+zones=uint16(zones); %convert to uint16
 
-
-zones = remove_small_zones(zones,mask,floor(30.*(dx/50.^2)));
+%% remove small zones, display
+zones = remove_small_zones(zones,mask,floor(30.*(dx/50.^2))); %function to remove orphaned pixels
 
 figure;
 imagesc(zones.*uint16(mask)); colorbar;
