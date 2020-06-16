@@ -20,7 +20,7 @@ DEM3(mask==0)=NaN;
 fx = Fx./sqrt(Fx.^2+Fy.^2);
 fy = Fy./sqrt(Fx.^2+Fy.^2);
 
-%% calculate flux corrected for slope direction (at ELA
+%% calculate flux corrected for slope direction 
 %     FLx=Umean.*thx;
 %     FLy=Vmean.*thx;
     
