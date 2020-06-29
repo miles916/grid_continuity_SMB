@@ -27,9 +27,9 @@ exports=1; %save geotiffs or not
 DX = 100; %resolution to run calculations at 
 
 %choose from test glaciers
-Glacier = 'Rongbuk'
+% Glacier = 'Rongbuk'
 % Glacier = 'Matanuska'
-% Glacier = 'Aletsch'
+Glacier = 'Aletsch'
 
 %title of output files
 datatitle = ['test_' Glacier];
@@ -173,8 +173,8 @@ end
     buffdist = 1000; %expands the domain for subsetting around the glacier
 
     %new coordinates based on the THX data, but at DX interval
-    N.x3 = DX.*[(floor((THX.xm(1)-buffdist)/DX)):((ceil(THX.xm(end)+buffdist)/DX))];
-    N.y3 = DX.*[(ceil((THX.ym(1)+buffdist)/DX)):-1:(floor((THX.ym(end)-buffdist)/DX))];
+    N.x3 = DX.*[(floor((THX.xm(1)-buffdist)/DX)-1):((ceil(THX.xm(end)+buffdist)/DX))-1];
+    N.y3 = DX.*[(ceil((THX.ym(1)+buffdist)/DX))+1:-1:(floor((THX.ym(end)-buffdist)/DX))+1];
     [N.x3g,N.y3g] = meshgrid(N.x3,N.y3);
 
     N.Rout = [0,-DX;DX,0;N.x3(1),N.y3(1)];
