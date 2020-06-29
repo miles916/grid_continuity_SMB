@@ -24,12 +24,12 @@ homedir = 'C:\Users\miles\Documents\GitHub\Flux_thickness_iteration';
 %configure inputs and outputs
 plotouts=1; %output plots or not
 exports=1; %save geotiffs or not
-DX = 100; %resolution to run calculations at 
+DX = 200; %resolution to run calculations at 
 
 %choose from test glaciers
-% Glacier = 'Rongbuk'
+Glacier = 'Rongbuk'
 % Glacier = 'Matanuska'
-Glacier = 'Aletsch'
+% Glacier = 'Aletsch'
 
 %title of output files
 datatitle = ['test_' Glacier];
@@ -49,7 +49,7 @@ switch Glacier
         DEM.path = fullfile(homedir,'data',Glacier,'15.09991_AW3D.tif');
         segdist = 300; %effective linear distance between flowbands
         V.mult=1; %scale to convert input units to m/a
-        V.filter=0; %switch to smooth velocity data or not
+        V.filter=0; %switch to smooth velocity data or not - this is the sigma for imgaussfilt  (5 is a good start, corresponds to 11x11)
         dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
     case 'Matanuska'
         V.pathx = fullfile(homedir,'data',Glacier,'Vx_Matanuska_ITSLIVE.tif');
@@ -60,7 +60,7 @@ switch Glacier
         DEM.path = fullfile(homedir,'data',Glacier,'GDEM_Matanuska.tif');
         segdist=2000; %effective linear distance between flowbands
         V.mult=1; %scale to convert input units to m/a
-        V.filter=0; %swtich to smooth velocity data or not
+        V.filter=0; %switch to smooth velocity data or not - this is the sigma for imgaussfilt  (5 is a good start, corresponds to 11x11)
         dhfilter=1; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
     case 'Aletsch'
         V.pathx = fullfile(homedir,'data',Glacier,'v_mean-x_(md-1)_winter_2011-2017.tiff');
@@ -70,7 +70,7 @@ switch Glacier
         DEM.path = fullfile(homedir,'data',Glacier,'DEM_aletsch_10m_utm32.tif');
         segdist=500; %effective linear distance between flowbands
         V.mult=365.24; %scale to convert input units to m/a
-        V.filter=1; %swtich to smooth velocity data or not
+        V.filter=30; %switch to smooth velocity data or not - this is the sigma for imgaussfilt (5 is a good start, corresponds to 11x11)
         dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
 end
 
@@ -118,9 +118,9 @@ end
         %read velocity data and scale and filter if needed
     V.Uraw=V.mult.*imread(V.pathx,'PixelRegion',V.PixelRegion);
     V.Vraw=V.mult.*imread(V.pathy,'PixelRegion',V.PixelRegion);
-    if V.filter==1 %gaussian low-pass filter removing extreme variations
-        V.Uraw=imgaussfilt(V.Uraw,5);
-        V.Vraw=imgaussfilt(V.Vraw,5);
+    if V.filter>0 %gaussian low-pass filter removing extreme variations
+        V.Uraw=imgaussfilt(V.Uraw,V.filter);
+        V.Vraw=imgaussfilt(V.Vraw,V.filter);
     end
     
         %calculate velocity end-points (reproject full velocity vector)
@@ -173,11 +173,11 @@ end
     buffdist = 1000; %expands the domain for subsetting around the glacier
 
     %new coordinates based on the THX data, but at DX interval
-    N.x3 = DX.*[(floor((THX.xm(1)-buffdist)/DX)-1):((ceil(THX.xm(end)+buffdist)/DX))-1];
-    N.y3 = DX.*[(ceil((THX.ym(1)+buffdist)/DX))+1:-1:(floor((THX.ym(end)-buffdist)/DX))+1];
+    N.x3 = DX.*[(floor((THX.xm(1)-buffdist)/DX)):((ceil(THX.xm(end)+buffdist)/DX))];
+    N.y3 = DX.*[(ceil((THX.ym(1)+buffdist)/DX)):-1:(floor((THX.ym(end)-buffdist)/DX))];
     [N.x3g,N.y3g] = meshgrid(N.x3,N.y3);
 
-    N.Rout = [0,-DX;DX,0;N.x3(1),N.y3(1)];
+    N.Rout = [0,-DX;DX,0;N.x3(1)-DX,N.y3(1)+DX]; %matlab georeferencing is off
 
     %RESAMPLE THICKNESS
 %     [THX.xN,THX.yN] = projfwd(THX.info,THX.LatG,THX.LonG); %compute projected coordinates
@@ -246,9 +246,9 @@ end
     N.FLUX = N.Smean.*N.THX;N.FLUX(N.FLUX<=0)=NaN;
     
     %first order centered-difference
-    N.FDIVx(:,2:end-1) = (N.Umean(:,1:end-2).*N.THX(:,1:end-2)-N.Umean(:,3:end).*N.THX(:,3:end)).*(dy)/2;
-    N.FDIVy(2:end-1,:) = (N.Vmean(1:end-2,:).*N.THX(1:end-2,:)-N.Vmean(3:end,:).*N.THX(3:end,:)).*(dx)/2;
-    N.FDIV = (N.FDIVx+N.FDIVy)/(dy*dx);%total and normalize to area, m/yr
+    N.FDIVx(:,2:end-1) = (N.Umean(:,3:end).*N.THX(:,3:end)-N.Umean(:,1:end-2).*N.THX(:,1:end-2))/2./dx;
+    N.FDIVy(2:end-1,:) = -(N.Vmean(3:end,:).*N.THX(3:end,:)-N.Vmean(1:end-2,:).*N.THX(1:end-2,:))/2./dx; %negative because V is opposite direction to raster pixels
+    N.FDIV = (N.FDIVx+N.FDIVy);%total and normalize to area, m/yr
 
     %trim to mask
     N.FDIV(N.MASK==0)=NaN;
@@ -287,7 +287,7 @@ end
    
      %% SMB
     
-    N.SMB = N.Hdensity.*N.DH-N.Qdensity.*N.FDIV; %continuity equation. note that 'density' terms are actually specific gravity
+    N.SMB = N.Hdensity.*N.DH+N.Qdensity.*N.FDIV; %continuity equation. note that 'density' terms are actually specific gravity
     N.SMBz2= zonal_aggregate(N.zones,N.SMB); %aggregates values in the zone - simple mean
 
     %mask before plotting
@@ -314,7 +314,7 @@ if plotouts==1
     Nout = 'grid-emergence'
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
-    imagesc(N.FDIV)
+    imagesc(-1.*N.FDIV)
     colorbar;colormap(flipud(cmap))
     title(Ntitle)
     caxis([-10,10])
@@ -333,7 +333,7 @@ if plotouts==1
     Nout = 'EL-zone-avg-emergence'
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
-    imagesc(N.z2fdiv)
+    imagesc(-1.*N.z2fdiv)
     colorbar;colormap(flipud(cmap))
     title(Ntitle)
     caxis([-5,5])
