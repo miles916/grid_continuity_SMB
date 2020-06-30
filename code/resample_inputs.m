@@ -6,7 +6,7 @@ function N = resample_inputs(DX,THX,V,DEM,DH)
     N.y3 = DX.*[(ceil((THX.ym(1)+buffdist)/DX)):-1:(floor((THX.ym(end)-buffdist)/DX))];
     [N.x3g,N.y3g] = meshgrid(N.x3,N.y3);
 
-    N.Rout = [0,-DX;DX,0;N.x3(1),N.y3(1)]; %updated georeferencing matrix based on new domain
+    N.Rout = [0,-DX;DX,0;N.x3(1)-DX,N.y3(1)+DX]; %updated georeferencing matrix based on new domain
     N.DX=DX;
 
     %RESAMPLE THICKNESS

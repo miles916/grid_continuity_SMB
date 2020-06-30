@@ -7,7 +7,7 @@ cmap = cbrewer('div','RdBu',21);
     Nout = 'grid-emergence'
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
-    imagesc(N.FDIV)
+    imagesc(-1.*N.FDIV)
     colorbar;colormap(flipud(cmap))
     title(Ntitle)
     caxis([-10,10])
@@ -26,7 +26,7 @@ cmap = cbrewer('div','RdBu',21);
     Nout = 'EL-zone-avg-emergence'
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
-    imagesc(N.z2fdiv)
+    imagesc(-1.*N.z2fdiv)
     colorbar;colormap(flipud(cmap))
     title(Ntitle)
     caxis([-5,5])

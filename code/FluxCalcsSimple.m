@@ -30,9 +30,9 @@ function N=FluxCalcsSimple(N,umult)
     N.FLUX = N.Smean.*N.THX;N.FLUX(N.FLUX<=0)=NaN;
     
     %first order centered-difference
-    N.FDIVx(:,2:end-1) = (N.Umean(:,1:end-2).*N.THX(:,1:end-2)-N.Umean(:,3:end).*N.THX(:,3:end)).*(dy)/2;
-    N.FDIVy(2:end-1,:) = (N.Vmean(1:end-2,:).*N.THX(1:end-2,:)-N.Vmean(3:end,:).*N.THX(3:end,:)).*(dx)/2;
-    N.FDIV = (N.FDIVx+N.FDIVy)/(dy*dx);%total and normalize to area, m/yr
+    N.FDIVx(:,2:end-1) = (N.Umean(:,3:end).*N.THX(:,3:end)-N.Umean(:,1:end-2).*N.THX(:,1:end-2))/2./dx;
+    N.FDIVy(2:end-1,:) = (N.Vmean(3:end,:).*N.THX(3:end,:)-N.Vmean(1:end-2,:).*N.THX(1:end-2,:))/2./dy;
+    N.FDIV = N.FDIVx+N.FDIVy; %total, m/yr
 
     %trim to mask
     N.FDIV(N.MASK==0)=NaN;
@@ -66,7 +66,7 @@ function N=FluxCalcsSimple(N,umult)
    
      %% SMB
     
-    N.SMB = N.Hdensity.*N.DH-N.Qdensity.*N.FDIV; %continuity equation. note that 'density' terms are actually specific gravity
+    N.SMB = N.Hdensity.*N.DH+N.Qdensity.*N.FDIV; %continuity equation. note that 'density' terms are actually specific gravity
     N.SMBz2= zonal_aggregate(N.zones,N.SMB); %aggregates values in the zone - simple mean
 
     %mask before plotting
