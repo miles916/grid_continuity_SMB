@@ -39,9 +39,9 @@ exports=1; %save geotiffs or not
 DX = 200; %resolution to run calculations at 
 segdist=500; %effective linear distance between flowbands
 V.mult=365.24; %scale to convert input units to m/a
-V.filter=30; %swtich to smooth velocity data or not; sets sigma in imgaussfilt (eg. 5 gives 11x11 window)
+V.filter=15; %swtich to smooth velocity data or not; sets sigma in imgaussfilt (eg. 5 gives 11x11 window)
 dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
-umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' optimizes. 
+umult=2; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 
 %% initialization
     addpath(genpath([homedir '\code'])) %add path to related scripts
@@ -163,11 +163,11 @@ umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' opti
 
     %% determine column-average velocity correction
     % convert velocity to column-averaged with a fixed multiplier - 0.9 for now but can be optimized
-    if umult==0 %optimizes based on range of ice thicknesses
+    if umult==0 %estimates based on range of ice thicknesses
         [umult,~,~]=f_probability2(N.THX(N.MASK)); %optimizes based on range of ice thicknesses
 %         umult=0.9; %range is [0.8,1], more realistically [0.81,0.99]
-%     elseif umult==2
-%         [umult,~]=f_probability1(N.THX,N.MASK); %optimizes based on each ice thickness
+    elseif umult==2 %estimates based on ice thickness of each individual pixel
+        [umult,~]=f_probability1(N.THX,N.MASK); %optimizes based on each ice thickness
     elseif umult<0.8|umult>1 
         error('Unphyiscal multiplier for column-averaged velocity')
     end

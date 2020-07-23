@@ -31,7 +31,7 @@ for ip=1:N
     disp(ip)
     for iTH=1:length(thx)
         cTHX=thx(iTH);
-        zs=linspace(1,cTHX,100);
+        zs=linspace(0,cTHX,100);
         for z=1:length(zs);
            cSt(z) = u_b(ip)*uS+uS*(1-u_b(ip)).*(1-((cTHX-zs(z))/cTHX)^(n(ip)+1));
         end

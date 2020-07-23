@@ -1,4 +1,32 @@
-function [ELA,FLout,cFLu,tFL,ELs,Afluxes]=through_fluxes(mask,DEM,Umean,Vmean,thx,dx)%,dy,sig_H,UE,VE,ERRORs)
+function [ELA,FLout,cFLu,tFL,ELs,Afluxes]=through_fluxes(mask,DEM,Umean,Vmean,thx,dx)
+% through_fluxes - Function to calculate volumetric fluxes of ice with 
+% respect to elevation. Corrects x- and y- components of velocity into 
+% down-and cross-glacier components based on smoothed DEM surface gradient,
+% then integrates down-glacier component across 25m elevation contours
+%
+% Syntax:  [ELA,FLout,cFLu,tFL,ELs,Afluxes]=through_fluxes(mask,DEM,Umean,Vmean,thx,dx)
+%
+% Inputs:
+%    mask - binary raster mask of glacier extent
+%    DEM - double-precision raster of elevation with same extent as mask
+%    Umean - double-precision raster of x-component of column-averaged velocity with same extent as mask
+%    Vmean - double-precision raster of y-component of column-averaged velocity with same extent as mask
+%    thx - double-precision raster of ice thickness with same extent as mask
+%    dx - pixel size in porjected units corresponding to veloctiy and DEM units (m)
+%
+% Outputs:
+%    ELA - elevation of peak down-glacier flux
+%    FLout - peak down-glacier ice flux (m3/a) 
+%    cFLu - raster of down-glacier oriented volumetric fluxes
+%    tFL - raster of volumetric flux at each pixel
+%    ELs - array of elevations at 25m intervals
+%    Afluxes - array of volumetric ice fluxes through ELs
+%
+%
+% Author: Evan Miles
+% Work address: Swiss Federal Research Institute WSL
+% Email: evan.miles@wsl.ch
+% Sep 2019; Last revision: 01-July-2020
 
 DEM1=DEM;
 
@@ -52,8 +80,8 @@ for iL=1:length(x)
 %     curpix=[floor(cury),floor(curx);floor(cury),ceil(curx);ceil(cury),floor(curx);ceil(cury),ceil(curx)];
 %     plot(curx,cury);hold on
 if length(curx)>1
-    segFL=interp2(tFL,x{iL},y{iL});
-%     segFL=interp2(cFLu,x{iL},y{iL});
+%     segFL=interp2(tFL,x{iL},y{iL});
+    segFL=interp2(cFLu,x{iL},y{iL});
 %     segTHX=interp2(thx,x{iL},y{iL});
     delx = diff(x{iL});
     dely = diff(y{iL});

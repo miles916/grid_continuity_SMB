@@ -44,8 +44,8 @@ toc
 f=V.Sm./V.S;
 %%
 % histogram(f)
-umult=mean(f);
-SIG_umult=std(f);
+umult=nanmean(f);
+SIG_umult=nanstd(f);
 
 
 

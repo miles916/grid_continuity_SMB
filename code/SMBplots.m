@@ -123,9 +123,21 @@ cmap = cbrewer('div','RdBu',21);
 %     plot(ELS(1:end-1)+dZ/2,elSMBz,'k');hold on
     try
         boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2);hold on
+        ylabel('SMB m/a')
+    ylim([-20,10])
+    yyaxis right
+    plot(N.ELs,N.ELfluxes,'linewidth',2)
+    ylim([0,3*max(N.ELfluxes)])
+    ylabel('Flux m^3/a')
+    title(Ntitle)
+%     legend('gridded','zonal','flux','location','southeast')
+%     legend('flux','location','southeast')
+    set(gca,'XTick',1000.*floor(min(N.DEM(iN)./1000)):500:1000.*ceil(max(N.DEM(iN)./1000)))
+    set(gca,'XTickLabel',get(gca,'XTick'))
+    saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     catch
-        boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2(1:end-1));hold on
-    end
+try     
+    boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2(1:end-1));hold on
     ylabel('SMB m/a')
     ylim([-20,10])
     yyaxis right
@@ -138,3 +150,7 @@ cmap = cbrewer('div','RdBu',21);
     set(gca,'XTick',1000.*floor(min(N.DEM(iN)./1000)):500:1000.*ceil(max(N.DEM(iN)./1000)))
     set(gca,'XTickLabel',get(gca,'XTick'))
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+catch
+end
+end
+    

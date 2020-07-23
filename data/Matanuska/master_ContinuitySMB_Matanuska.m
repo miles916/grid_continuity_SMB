@@ -42,6 +42,7 @@ segdist=2000; %effective linear distance between flowbands
 V.mult=1; %scale to convert input units to m/a
 V.filter=0; %swtich to smooth velocity data or not
 dhfilter=1; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
+umult=2; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 
 
 %% initialization
@@ -164,7 +165,14 @@ dhfilter=1; %switch to peform 2x 3-sigma outlier removal (from overall dataset -
 
     %% determine column-average velocity correction
     % convert velocity to column-averaged with a fixed multiplier - 0.9 for now but can be optimized
-    umult=0.9; %range is [0.8,1], more realistically [0.81,0.99]
+    if umult==0 %estimates based on range of ice thicknesses
+        [umult,~,~]=f_probability2(N.THX(N.MASK)); %optimizes based on range of ice thicknesses
+%         umult=0.9; %range is [0.8,1], more realistically [0.81,0.99]
+    elseif umult==2 %estimates based ice thickness of each individual pixel
+        [umult,~]=f_probability1(N.THX,N.MASK); %optimizes based on each ice thickness
+    elseif umult<0.8|umult>1 
+        error('Unphyiscal multiplier for column-averaged velocity')
+    end
 
     %% SMB calculations
     cd(outdir)
