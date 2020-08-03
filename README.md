@@ -1,5 +1,5 @@
-# Flux_thickness_iteration
-Collection of MATLAB codes and scripts to improve flux-based ice thickness estimates by ingesting observed surface velocity and elevation change data
+# Flux_based_SMB
+Collection of MATLAB codes and scripts to estimate SMB based on remote sensing observations of velocity and surface elevation changes, with ice thickness estimates. Now being adapted to improve flux-based ice thickness estimates by ingesting these observed surface velocity and elevation change data.
 
 ## Getting Started
 
