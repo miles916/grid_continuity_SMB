@@ -42,7 +42,7 @@ for ip=1:N
     clear cSm
 end
 
-umult=NaN.*THX;
+umult=0.*THX;
 SIG_umult=f;
 umult(MASK)=nanmean(f,2);
 SIG_umult(MASK)=nanstd(f,[],2);

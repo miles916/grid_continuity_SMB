@@ -27,7 +27,8 @@ function N=FluxCalcsSimple(N)
     N.FDIVy = zeros(size(N.THX));
 
     %pixel-based flux magnitude
-    N.FLUX = N.Smean.*N.THX;N.FLUX(N.FLUX<=0)=NaN;
+    N.FLUX = N.Smean.*N.THX;
+    N.FLUX(N.FLUX<=0)=NaN;
     
     %first order centered-difference
     N.FDIVx(:,2:end-1) = (N.Umean(:,3:end).*N.THX(:,3:end)-N.Umean(:,1:end-2).*N.THX(:,1:end-2))/2./dx;

@@ -164,17 +164,19 @@ umult=2; %switch for column-average velocity [0.8-1] is physical range. '0' esti
     %% determine column-average velocity correction
     % convert velocity to column-averaged with a fixed multiplier - 0.9 for now but can be optimized
     if umult==0 %estimates based on range of ice thicknesses
-        [umult,~,~]=f_probability2(N.THX(N.MASK)); %optimizes based on range of ice thicknesses
+        [N.umult,~,~]=f_probability2(N.THX(N.MASK)); %optimizes based on range of ice thicknesses
 %         umult=0.9; %range is [0.8,1], more realistically [0.81,0.99]
     elseif umult==2 %estimates based on ice thickness of each individual pixel
-        [umult,~]=f_probability1(N.THX,N.MASK); %optimizes based on each ice thickness
+        [N.umult,~]=f_probability1(N.THX,N.MASK); %optimizes based on each ice thickness
     elseif umult<0.8|umult>1 
         error('Unphyiscal multiplier for column-averaged velocity')
+    else
+        N.umult=umult;
     end
         
     %% SMB calculations
     cd(outdir)
-    N=FluxCalcsSimple(N,umult); %calculates fluxes 
+    N=FluxCalcsSimple(N); %calculates fluxes 
     
 %% DETERMINE FLUXES THROUGH EACH ELEVATION BAND
     [N.ELA,N.FLout,N.cFLu,N.tFL,N.ELs,N.ELfluxes]=through_fluxes(N.MASK,N.DEM,N.Umean,N.Vmean,N.THX,N.DX);%,dy,sig_H,UE,VE,ERRORs)
