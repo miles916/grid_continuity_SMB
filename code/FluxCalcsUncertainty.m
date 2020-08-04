@@ -86,6 +86,6 @@ function N=FluxCalcsUncertainty(N,nr)
     N.z2DH = zonal_aggregate(N.zones,N.DH); % aggregates values in the zone - simple mean
     N.SMBz2= zonal_aggregate(N.zones,N.SMB); %aggregates values in the zone - simple mean
     
-    N.z2fdiv_unc = zonal_aggregate(N.zones,N.FDIVu); % aggregates values in the zone - simple mean excluding NaNs; same result as perimeter integration
-    N.z2DH_unc = zonal_aggregate(N.zones,N.sigDH); % aggregates values in the zone - simple mean
-    N.SMBz2_unc= zonal_aggregate(N.zones,N.SMBu); %aggregates values in the zone - simple mean
+    N.z2fdiv_unc = zonal_aggregate_v2(N.zones,N.FDIVu,'rssn'); % aggregates values in the zone - simple mean excluding NaNs; same result as perimeter integration
+    N.z2DH_unc = zonal_aggregate_v2(N.zones,N.sigDH,'rssn'); % aggregates values in the zone - simple mean
+    N.SMBz2_unc= zonal_aggregate_v2(N.zones,N.SMBu,'rssn'); %aggregates values in the zone - simple mean
