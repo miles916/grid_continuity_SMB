@@ -34,14 +34,14 @@ THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-15.09991_HF2012.tif'
 DEM.path = fullfile(homedir,'data',Glacier,'15.09991_AW3D.tif');
 
 %settings
-plotouts=1; %output plots or not
+plotouts=0; %output plots or not
 exports=1; %save geotiffs or not
-DX = 200; %resolution to run calculations at 
+DX = 50; %resolution to run calculations at 
 segdist=300; %effective linear distance between flowbands
 V.mult=1; %scale to convert input units to m/a
 V.filter=0; %swtich to smooth velocity data or not
 dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
-umult=2; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
+umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 
 
 %% initialization

@@ -52,8 +52,8 @@ fy = Fy./sqrt(Fx.^2+Fy.^2);
 %     FLx=Umean.*thx;
 %     FLy=Vmean.*thx;
     
-    cFLu = dot([Umean(:),-Vmean(:)]',[-fx(:),-fy(:)]',1);
-    cFLv = dot([Umean(:),-Vmean(:)]',[fy(:),-fx(:)]',1);
+    cFLu = dot([Umean(:),-Vmean(:)]',[-fx(:),-fy(:)]',1).*thx;
+    cFLv = dot([Umean(:),-Vmean(:)]',[fy(:),-fx(:)]',1).*thx;
     cFLu=reshape(cFLu,size(Umean));cFLv=reshape(cFLv,size(Umean));
     
 %     figure;
