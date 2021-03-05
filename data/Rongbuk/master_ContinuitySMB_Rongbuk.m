@@ -18,7 +18,7 @@ clear
 close all
 
 %set home directory
-homedir = 'C:\Users\miles\Documents\GitHub\Flux_thickness_iteration';
+homedir = 'C:\Users\miles\Documents\GitHub\grid_continuity_SMB';
 
 %glacier ID
 Glacier = 'Rongbuk'
@@ -30,11 +30,11 @@ datatitle = ['test_' Glacier];
 V.pathx = fullfile(homedir,'data',Glacier,'HMA_G0120_vx.tif');
 V.pathy = fullfile(homedir,'data',Glacier,'HMA_G0120_vy.tif');
 DH.path = fullfile(homedir,'data',Glacier,'15.09991_dH.tif');
-THX.path = fullfile(homedir,'data',Glacier,'thickness_RGI60-15.09991_HF2012.tif');
+THX.path = fullfile(homedir,'data',Glacier,'RGI60-15.09991_thickness_composite.tif');
 DEM.path = fullfile(homedir,'data',Glacier,'15.09991_AW3D.tif');
 
 %settings
-plotouts=0; %output plots or not
+plotouts=1; %output plots or not
 exports=1; %save geotiffs or not
 DX = 50; %resolution to run calculations at 
 segdist=300; %effective linear distance between flowbands
