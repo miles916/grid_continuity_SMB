@@ -1,6 +1,8 @@
 # grid_continuity_SMB
 Collection of MATLAB codes and scripts to estimate SMB based on remote sensing observations of velocity and surface elevation changes, with ice thickness estimates. 
 
+Includes example input data for Rongbuk Glacier.
+
 ## Prerequisites
 
 You need:
