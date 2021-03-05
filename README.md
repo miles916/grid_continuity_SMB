@@ -17,8 +17,8 @@ Simply clone the repository, then adjust the master_FluxCalcsSimple.m script to 
 
 # Authors
 
-* **Evan Miles** - *Flux-based SMB calculations* - [miles916](https://github.com/miles916), [Miles_of_Ice](https://twitter.com/Miles_of_Ice)
-* **Amaury Dehecq** - *Conceptual development* - [adehecq](https://github.com/adehecq)
+* **Evan Miles** - [miles916](https://github.com/miles916), [Miles_of_Ice](https://twitter.com/Miles_of_Ice)
+* **Amaury Dehecq** - [adehecq](https://github.com/adehecq)
 
 # License
 
