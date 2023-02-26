@@ -1,6 +1,6 @@
 %master_ContinuitySMB_ex.m - Master script to estimate surface mass balance
 %distribution for a glacier from inputs of ice thickness, thinning, and
-%velocity, based on the continuity equation (see, e.g. Bisset et al, 2020: https://doi.org/10.3390/rs12101563)
+%velocity, based on the continuity equation (see, e.g. Miles et al, 2021)
 %
 % New glaciers require this template to be coded with paths for the full set of
 % inputs, and any additional needed preprocessing. 
@@ -18,7 +18,7 @@ clear
 close all
 
 %set home directory
-homedir = 'C:\Users\miles\Documents\GitHub\grid_continuity_SMB';
+homedir = 'C:\Users\miles\Documents\GitHub\Flux_thickness_iteration';
 
 %glacier ID
 P.Glacier = 'Rongbuk'
@@ -45,7 +45,6 @@ P.THXfilter=0; %switch to apply simply Gaussian filter to thickness data (useful
 P.umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
 N.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
-N.uncertainty=0; %0 for 'simple run without uncertainty, otherwise N runs
 
 % initialization
 addpath(genpath([homedir '\code'])) %add path to related scripts
@@ -97,6 +96,7 @@ cd(outdir)
 
     %% zone segmentation
     N.zones = uint16(segment_Gmask_slope2(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
+%     N.zones = uint16(segment_Gmask_EL(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
 
     %% determine column-average velocity correction
     N = derive_umult(N,P);
