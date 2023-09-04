@@ -4,7 +4,7 @@ gappy=double(gappy(:));
 index=index(:);
 
 %find gaps
-iNA=find(isnan(gappy));
+iNA=find(isnan(gappy)|gappy==0);
 
 %rescale index raster to [0,100]
 index2=double(index-nanmin(index));
@@ -14,11 +14,17 @@ index2=100.*index2./nanmax(index2);
 ixv=0.5:1:99.5;
 val=NaN(size(ixv));
 for ix=1:length(ixv)
-    val(ix)=nanmean(gappy((index2>=ixv(ix)-0.5)&(index2<=ixv(ix)+0.5)));
+    cur=gappy((index2>=ixv(ix)-0.5)&(index2<=ixv(ix)+0.5));
+    val(ix)=nanmedian(cur((cur==0)==0));
 end
+
+irem=isnan(val);
+ixv(irem)=[];
+val(irem)=[];
+
 
 %fill in gaps with interpolation
 filled=gappy;
-filled(iNA)=interp1(ixv,val,index2(iNA));
+filled(iNA)=interp1(ixv,val,index2(iNA),'linear','extrap');
 
 filled =reshape(filled,[m,n]);

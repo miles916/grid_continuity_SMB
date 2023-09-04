@@ -12,6 +12,13 @@ function N=FluxCalcsSimple(N)
 % Email: evan.miles@wsl.ch
 % Sep 2019; Last revision: 16-June-2020
 
+% %test effect of smoothing velocity instead of FDIV
+%     N.Smean=N.umult.*N.S;
+%     N.Ua = flowfilter_varsig(N,N.U);
+%     N.Va = flowfilter_varsig(N,N.V);
+%     N.THX = flowfilter_varsig(N,N.THX);
+%     N.S=sqrt(N.U.^2+N.V.^2);
+    
 %% FLUX AND EMERGENCE CALCS 
     N.Smean=N.umult.*N.S;
     N.Umean=N.umult.*N.U;
@@ -30,14 +37,75 @@ function N=FluxCalcsSimple(N)
     N.FLUX = N.Smean.*N.THX;
     N.FLUX(N.FLUX<=0)=NaN;
     
-    %first order centered-difference
-    N.FDIVx(:,2:end-1) = (N.Umean(:,3:end).*N.THX(:,3:end)-N.Umean(:,1:end-2).*N.THX(:,1:end-2))/2./dx;
-    N.FDIVy(2:end-1,:) = (N.Vmean(3:end,:).*N.THX(3:end,:)-N.Vmean(1:end-2,:).*N.THX(1:end-2,:))/2./dy;
-    N.FDIV = N.FDIVx+N.FDIVy; %total, m/yr
+%    %first order centered-difference
+%    N.FDIVx(:,2:end-1) = (N.Umean(:,3:end).*N.THX(:,3:end)-N.Umean(:,1:end-2).*N.THX(:,1:end-2))/2./dx;
+%    N.FDIVy(2:end-1,:) = (N.Vmean(3:end,:).*N.THX(3:end,:)-N.Vmean(1:end-2,:).*N.THX(1:end-2,:))/2./dy;
+%    N.FDIV = N.FDIVx+N.FDIVy; %total, m/yr
 
+%    %trim to mask
+%    N.FDIV(N.MASK==0)=NaN;
+
+    N.FLUX(N.FLUX<=0)=0;
+    
+%     %first order centered-difference - replaced with the formulation from
+%     Van Tricht et al (2021) - see below
+%     N.FDIVx(:,2:end-1) = (N.Umean(:,3:end).*N.THX(:,3:end)-N.Umean(:,1:end-2).*N.THX(:,1:end-2))/2./dx;
+%     N.FDIVy(2:end-1,:) = (N.Vmean(3:end,:).*N.THX(3:end,:)-N.Vmean(1:end-2,:).*N.THX(1:end-2,:))/2./dy;
+%     N.FDIV = N.FDIVx+N.FDIVy; %total, m/yr
+        
+    N.Umean(isnan(N.Umean))=0;
+    N.Vmean(isnan(N.Vmean))=0;
+    N.THX(isnan(N.THX))=0;
+    
+    %VanTricht2021 formulation of flux divergence - numerically equivalent to above
+    [N.dUdx,~]=gradient(N.Umean,dx);%dx to normalize to pixels
+    [~,N.dVdy]=gradient(N.Vmean,dy);N.dVdy=N.dVdy; 
+    [N.dHdx,N.dHdy]=gradient(N.THX,dx,dy);
+
+    N.dUdx((N.MASK)==0)=NaN;
+    N.dVdy((N.MASK)==0)=NaN;
+    N.dHdx((N.MASK)==0)=NaN;
+    N.dHdy((N.MASK)==0)=NaN;
+    
+    N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
+    if N.fdivfilt==2 %use spatially-filtered gradients
+        N.FDIV0=N.FDIV;
+        N.dUdx0=N.dUdx;N.dVdy0=N.dVdy;
+        N.dUdx = flowfilter_varsig(N,N.dUdx);
+        N.dVdy = flowfilter_varsig(N,N.dVdy);
+        N.dHdx0=N.dHdx;N.dHdy0=N.dHdy;
+        N.dHdx = flowfilter_varsig(N,N.dHdx);
+        N.dHdy = flowfilter_varsig(N,N.dHdy);
+        N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
+    end
+        
     %trim to mask
     N.FDIV(N.MASK==0)=NaN;
+    
+    
+    %% filter FDIV 
+    if N.fdivfilt>=1
+    % %filter respecting NaNs
+    %     rad1=nanmax(N.THX(N.MASK));%     find max thx, radius
+    %     rad2=nanmean(N.Smean(N.MASK));%     find max thx, radius
+    %     dist=3*ceil(rad1./N.DX).*ceil(rad2./N.DX);
+    %     N.FDIV0=N.FDIV;
+    %     N.FDIV=imgaussfiltNaN(N.FDIV,dist); %gaussian filter 
+    % %      N.FDIV=ndnanfilter(N.FDIV,@rectwin,[dist],1); %rectangular
+    % % %     averaging filter, operates on columns!
+    % %      N.FDIV=ndnanfilter(N.FDIV,@rectwin,[dist],2); %rectangular
+    % % %     averaging filter, operates on rows!
+    %     N.FDIV=N.FDIV-nanmean(N.FDIV(:)); %rescale so that the integral is 0
 
+        % filter with varying search distance, respecting NaNs
+        N.FDIV0=N.FDIV;
+        [N.FDIV,N.delFDIV] = flowfilter_varsig(N,N.FDIV);
+        disp(num2str(N.delFDIV,5))
+    end
+    % filter based on local velocity
+    
+    % ensure filter is conservative
+    
     %% aggregate variables over zones
     N.z2fdiv = zonal_aggregate(N.zones,N.FDIV); % aggregates values in the zone - simple mean excluding NaNs; same result as perimeter integration
     N.z2DH = zonal_aggregate(N.zones,N.DH); % aggregates values in the zone - simple mean
