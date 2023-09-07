@@ -13,7 +13,7 @@ Other dependencies are included in /code
 
 ## Installing
 
-Simply clone the repository, then adjust the master_FluxCalcsSimple.m script to get going. Example data are included for Matanuska and Rongbuk Glaciers. Ensure that input velocity data (dx, dy) are relative to their coordinate system.
+Simply clone the repository, then adjust the master_FluxCalcsSimple.m script to get going. Example data are included for Rongbuk Glacier. Ensure that input velocity data (dx, dy) are relative to their coordinate system.
 
 # Authors
 
