@@ -94,7 +94,7 @@ cmap = cbrewer('div','RdBu',21);
     scatter(N.DEM(iN),N.SMB(iN),4,'kd');hold on
     scatter(N.DEM(iN),N.SMBz2(iN),4,'b*');
     ylabel('SMB m/a')
-    ylim([-20,10])    
+%     ylim([-20,10])    
     title(Ntitle)
     legend('gridded SMB','zonal SMB','elevation fluxes')
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
@@ -124,7 +124,7 @@ cmap = cbrewer('div','RdBu',21);
     try
         boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2);hold on
         ylabel('SMB m/a')
-    ylim([-20,10])
+%     ylim([-20,10])
     yyaxis right
     plot(N.ELs,N.ELfluxes,'linewidth',2)
     ylim([0,3*max(N.ELfluxes)])
@@ -139,7 +139,7 @@ cmap = cbrewer('div','RdBu',21);
 try     
     boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2(1:end-1));hold on
     ylabel('SMB m/a')
-    ylim([-20,10])
+%     ylim([-10,5])
     yyaxis right
     plot(N.ELs,N.ELfluxes,'linewidth',2)
     ylim([0,3*max(N.ELfluxes)])

@@ -44,7 +44,7 @@ P.dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset
 P.THXfilter=0; %switch to apply simply Gaussian filter to thickness data (useful for field thickness measurements)
 P.umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
-N.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
+P.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
 
 % initialization
 addpath(genpath([homedir '\code'])) %add path to related scripts
@@ -103,6 +103,7 @@ cd(outdir)
 
     %% SMB calculations
     cd(outdir)
+    N.fdivfilt=P.fdivfilt;
     N=FluxCalcsSimple(N); %calculates fluxes 
     
 %% DETERMINE FLUXES THROUGH EACH ELEVATION BAND
