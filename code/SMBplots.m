@@ -10,7 +10,7 @@ cmap = cbrewer('div','RdBu',21);
     imagesc(-1.*N.FDIV)
     colorbar;colormap(flipud(cmap))
     title(Ntitle)
-    caxis([-10,10])
+    caxis([-5,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
     Nout = 'EL-zones'
@@ -38,7 +38,7 @@ cmap = cbrewer('div','RdBu',21);
     imagesc(N.DH)
     colorbar;colormap(cmap2)
     title(Ntitle)
-    caxis([-10,5])
+    caxis([-5,2.5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
     Nout = 'grid-SMB'
@@ -47,7 +47,7 @@ cmap = cbrewer('div','RdBu',21);
     imagesc(N.SMB)
     colorbar;colormap(cmap2)
     title(Ntitle)
-    caxis([-10,5])
+    caxis([-5,2.5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
     Nout = 'grid-Hdensity'
@@ -74,7 +74,7 @@ cmap = cbrewer('div','RdBu',21);
     imagesc(N.SMBz2)
     colorbar;colormap(cmap2)
     title(Ntitle)
-    caxis([-10,5])
+    caxis([-5,2.5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
     %
