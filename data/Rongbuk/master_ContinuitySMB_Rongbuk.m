@@ -30,6 +30,7 @@ datatitle = ['test_' P.Glacier];
 V.pathx = fullfile(homedir,'data',P.Glacier,'HMA_G0120_vx.tif');
 V.pathy = fullfile(homedir,'data',P.Glacier,'HMA_G0120_vy.tif');
 V.mult=1; %scale to convert input units to m/a
+P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
 DH.path = fullfile(homedir,'data',P.Glacier,'15.09991_dH.tif');
 DH.mult=1; %scale to convert input units to m/a
 THX.path = fullfile(homedir,'data',P.Glacier,'RGI60-15.09991_thickness_composite.tif');
@@ -44,7 +45,7 @@ P.Vfilter=0; %swtich to smooth velocity data or not
 P.dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset - only if erroneous pixels are common)
 P.THXfilter=0; %switch to apply simply Gaussian filter to thickness data (useful for field thickness measurements)
 P.umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
-P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
+% P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
 P.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
 P.uncertainty=0; %0 for 'simple run without uncertainty, otherwise N runs; note that you will then need to setup perturbations within the N structure
 
@@ -99,8 +100,8 @@ cd(outdir)
     N.DH((N.MASK==0))=0;
 
     %% zone segmentation
-    N.zones = uint16(segment_Gmask_slope2(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
-%     N.zones = uint16(segment_Gmask_EL(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
+%     N.zones = uint16(segment_Gmask_slope2(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
+    N.zones = uint16(segment_Gmask_EL(N.DEM,N.MASK,P.DX,P.segdist./5)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
 
     %% determine column-average velocity correction
     N = derive_umult(N,P);

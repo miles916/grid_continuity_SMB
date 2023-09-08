@@ -39,7 +39,7 @@ function [THX,DEM,V,DH]=load_subset_all(P,THX,DEM,V,DH)
         V.VrawE=V.mult.*imread(V.pathye,'PixelRegion',V.PixelRegion);
     end
     
-    
+    V.Vreproj=P.Vreproj;
     if P.Vreproj == 1
             %calculate velocity end-points (reproject full velocity vector)
         V.xm2=V.xmG+double(V.Uraw); %velocity vector end-point

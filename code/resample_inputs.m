@@ -19,11 +19,11 @@ function N = resample_inputs(DX,THX,V,DEM,DH)
     %resample velocity data
     [V.xN,V.yN] = projfwd(THX.info,V.LatG(:),V.LonG(:)); %compute projected coordinates
     V.xN(V.iERR)=[];V.yN(V.iERR)=[];
-    if isempty(V.info.PCS) %if velocity data has a source projection
+    if V.Vreproj==0 %if no reprojection, assume north-oriented
         V.Uraw2=V.Uraw(:);V.Uraw2(V.iERR)=[]; %OLD
         V.Vraw2=V.Vraw(:);V.Vraw2(V.iERR)=[]; %OLD
-    else %geographic - assume values are relative to N and projected!!
-        [V.x2N,V.y2N] = projfwd(THX.info,V.LatG(:),V.LonG(:)); %compute projected coordinates for vector end-points
+    else %use projected end-points
+        [V.x2N,V.y2N] = projfwd(THX.info,V.Lat2(:),V.Lon2(:)); %compute projected coordinates for vector end-points
         V.x2N(V.iERR)=[];V.y2N(V.iERR)=[];
         V.Uraw2=V.x2N-V.xN; %velocity vector in new coord system
         V.Vraw2=V.y2N-V.yN; %velocity vector in new coord system
