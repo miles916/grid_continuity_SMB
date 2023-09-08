@@ -29,6 +29,7 @@ function N=FluxCalcsUncertainty(N,nr)
     
 %%  nr random draws for systematic (THXscale,umult,Vscale) and random (10m thx, sig m/a vel, sig density & dH) uncertainty
 %     nr= 1000;
+    nr = N.uncertainty;
     rns=randn(nr,6); %values
     prns=cdf('Normal',rns,1,1);
         

@@ -1,6 +1,6 @@
 %master_ContinuitySMB_ex.m - Master script to estimate surface mass balance
 %distribution for a glacier from inputs of ice thickness, thinning, and
-%velocity, based on the continuity equation (see, e.g. Bisset et al, 2020: https://doi.org/10.3390/rs12101563)
+%velocity, based on the continuity equation (see, e.g. Miles et al, 2021)
 %
 % New glaciers require this template to be coded with paths for the full set of
 % inputs, and any additional needed preprocessing. 
@@ -31,6 +31,7 @@ V.pathx = fullfile(homedir,'data',P.Glacier,'HMA_G0120_vx.tif');
 V.pathy = fullfile(homedir,'data',P.Glacier,'HMA_G0120_vy.tif');
 V.mult=1; %scale to convert input units to m/a
 DH.path = fullfile(homedir,'data',P.Glacier,'15.09991_dH.tif');
+DH.mult=1; %scale to convert input units to m/a
 THX.path = fullfile(homedir,'data',P.Glacier,'RGI60-15.09991_thickness_composite.tif');
 DEM.path = fullfile(homedir,'data',P.Glacier,'15.09991_AW3D.tif');
 
@@ -44,8 +45,8 @@ P.dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset
 P.THXfilter=0; %switch to apply simply Gaussian filter to thickness data (useful for field thickness measurements)
 P.umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
-N.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
-N.uncertainty=0; %0 for 'simple run without uncertainty, otherwise N runs
+P.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
+P.uncertainty=0; %0 for 'simple run without uncertainty, otherwise N runs; note that you will then need to setup perturbations within the N structure
 
 % initialization
 addpath(genpath([homedir '\code'])) %add path to related scripts
@@ -87,6 +88,8 @@ cd(outdir)
     
     %% REPROJECT AND RESAMPLE ALL INPUTS (to THX coordinate system), derive MASK, etc
     N = resample_inputs(P.DX,THX,V,DEM,DH);
+    N.fdivfilt=P.fdivfilt;
+    N.uncertainty=P.uncertainty;
     
     %% fill gaps in reprojected inputs if needed
     
@@ -97,24 +100,30 @@ cd(outdir)
 
     %% zone segmentation
     N.zones = uint16(segment_Gmask_slope2(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
+%     N.zones = uint16(segment_Gmask_EL(N.DEM,N.MASK,P.DX,P.segdist)); %segments glacier mask and DEM into approximately uniformly-spaced elevation bands
 
     %% determine column-average velocity correction
     N = derive_umult(N,P);
 
     %% SMB calculations
     cd(outdir)
-    N=FluxCalcsSimple(N); %calculates fluxes 
-    
+
+    if N.uncertainty>1
+        N=FluxCalcsUncertainty(N); %calculates fluxes 
+    else
+        N=FluxCalcsSimple(N); %calculates fluxes 
+    end    
 %% DETERMINE FLUXES THROUGH EACH ELEVATION BAND
 %     [N.ELA,N.FLout,N.cFLu,N.tFL,N.ELs,N.ELfluxes]=through_fluxes(N.MASK,N.DEM,N.Umean,N.Vmean,N.THX,N.DX);%,dy,sig_H,UE,VE,ERRORs)
 
 if P.plotouts==1
     SMBplots(N,outtitle1,P.Glacier);
 end
+
     
     %% export geotifs
 if P.exports==1
-    writegeotiffs(N,THX,P.Glacier)
+    writegeotiffs(N,THX,P)
 end
 
 %%    
