@@ -4,9 +4,9 @@ if THX.info.GeoTIFFTags.GeoKeyDirectoryTag.GTRasterTypeGeoKey==1 %Matlab geotiff
     N.Rout(3,2)=N.Rout(3,2)+N.DX;
 end
 try
-    Glacier=P;
-catch
     Glacier=P.Glacier;
+catch
+    Glacier=P;
 end
     % DEM
     geotiffwrite([Glacier '_DEM.tif'],uint16(N.DEM),N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))

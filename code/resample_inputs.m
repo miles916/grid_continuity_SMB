@@ -10,12 +10,13 @@ function N = resample_inputs(DX,THX,V,DEM,DH)
     N.DX=DX;
 
     %RESAMPLE THICKNESS
+    THX.data(isnan(THX.data))=0;%Nans result in contraction of the glacier domain after interpolation
 %     [THX.xN,THX.yN] = projfwd(THX.info,THX.LatG,THX.LonG); %compute projected coordinates
 %     N.THX = griddata(THX.xN(:),THX.yN(:),double(THX.data(:)),N.x3g(:),N.y3g(:),'cubic');
-    N.THX = griddata(THX.xmG(:),THX.ymG(:),double(THX.data(:)),N.x3g(:),N.y3g(:),'cubic');
+    N.THX = griddata(THX.xmG(:),THX.ymG(:),double(THX.data(:)),N.x3g(:),N.y3g(:),'linear');
     N.THX = reshape(N.THX,size(N.x3g));
     N.MASK=N.THX>0;
-
+    
     %resample velocity data
     [V.xN,V.yN] = projfwd(THX.info,V.LatG(:),V.LonG(:)); %compute projected coordinates
     V.xN(V.iERR)=[];V.yN(V.iERR)=[];
