@@ -13,7 +13,7 @@ function N = resample_inputs(DX,THX,V,DEM,DH)
     THX.data(isnan(THX.data))=0;%Nans result in contraction of the glacier domain after interpolation
 %     [THX.xN,THX.yN] = projfwd(THX.info,THX.LatG,THX.LonG); %compute projected coordinates
 %     N.THX = griddata(THX.xN(:),THX.yN(:),double(THX.data(:)),N.x3g(:),N.y3g(:),'cubic');
-    N.THX = griddata(THX.xmG(:),THX.ymG(:),double(THX.data(:)),N.x3g(:),N.y3g(:),'linear');
+    N.THX = griddata(THX.xmG(:),THX.ymG(:),double(THX.data(:)),N.x3g(:),N.y3g(:),'natural');
     N.THX = reshape(N.THX,size(N.x3g));
     N.MASK=N.THX>0;
     
@@ -29,18 +29,18 @@ function N = resample_inputs(DX,THX,V,DEM,DH)
         V.Uraw2=V.x2N-V.xN; %velocity vector in new coord system
         V.Vraw2=V.y2N-V.yN; %velocity vector in new coord system
     end
-    N.U = griddata(V.xN(:),V.yN(:),double(V.Uraw2(:)),N.x3g(:),N.y3g(:),'linear');
+    N.U = griddata(V.xN(:),V.yN(:),double(V.Uraw2(:)),N.x3g(:),N.y3g(:),'natural');
     N.U = reshape(N.U,size(N.x3g));
-    N.V = griddata(V.xN(:),V.yN(:),double(V.Vraw2(:)),N.x3g(:),N.y3g(:),'linear');
+    N.V = griddata(V.xN(:),V.yN(:),double(V.Vraw2(:)),N.x3g(:),N.y3g(:),'natural');
     N.V = reshape(N.V,size(N.x3g));
     N.S = sqrt(N.V.^2+N.U.^2); %speed as velocity vector magnitude
 
     %resample DEM
     [DEM.xN,DEM.yN] = projfwd(THX.info,DEM.LatG,DEM.LonG); %compute projected coordinates
-    N.DEM = griddata(DEM.xN(:),DEM.yN(:),double(DEM.data(:)),N.x3g(:),N.y3g(:),'cubic');
+    N.DEM = griddata(DEM.xN(:),DEM.yN(:),double(DEM.data(:)),N.x3g(:),N.y3g(:),'natural');
     N.DEM = reshape(N.DEM,size(N.x3g));
 
     %resample dH
     [DH.xN,DH.yN] = projfwd(THX.info,DH.LatG,DH.LonG); %compute projected coordinates
-    N.DH = griddata(DH.xN(:),DH.yN(:),double(DH.dH3(:)),N.x3g(:),N.y3g(:),'cubic');
+    N.DH = griddata(DH.xN(:),DH.yN(:),double(DH.dH3(:)),N.x3g(:),N.y3g(:),'natural');
     N.DH = reshape(N.DH,size(N.x3g));
