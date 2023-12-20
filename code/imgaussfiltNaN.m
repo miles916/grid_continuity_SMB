@@ -1,7 +1,6 @@
 function Z = imgaussfiltNaN(im,sig,varargin)
 %imgaussfiltNaN - Function to implement a gaussian filter as in imgaussfilt() but ignoring NaN values. follows approach at:
 %https://stackoverflow.com/questions/18697532/gaussian-filtering-a-image-with-nan-in-python
-
 %
 % Syntax:  Z = imgaussfiltNaN(im,sig)
 %          Z = imgaussfiltNaN(im,sig,erasenans)
