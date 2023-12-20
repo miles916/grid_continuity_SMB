@@ -12,8 +12,22 @@ fs.L = 4; %length of filter area in ice thicknesses*velocity - assume symmetrica
 
 % N.Smean2=imgaussfiltNaN(N.Smean,fs.L.*ceil(max(N.THX(:))./N.DX)); %smooth velocity signal
 
-fs.sdist=fs.L.*ceil(N.THX./N.DX);%.*ceil(N.Smean2.*N.MASK./N.DX); %local thickness in pixel-equivalent
+fs.sdist=ceil(fs.L.*N.THX./N.DX);%.*ceil(N.Smean2.*N.MASK./N.DX); %local thickness in pixel-equivalent
 fs.smax=nanmax(fs.sdist(:)); %maximum distance in pixel-equivalent
+
+%% derive skeleton, expand, attribute nearest distance
+SK=bwskel(imbinarize(N.THX));
+%  SK = imdilate(SK,strel('diamond',10));
+SKd=fs.sdist.*SK; SKd(SKd==0)=NaN;
+[r,c]=ind2sub(size(SK),find(SK==1));
+[r2,c2]=ind2sub(size(SK),find(N.MASK==1));
+r2=1:size(SK,1);c2=1:size(SK,2);[c2,r2]=meshgrid(c2,r2);
+relD=griddata(c,r,SKd(SK),c2,r2,'natural');
+% relD=inpaint_nans(SKd,2);
+
+%determine maximum value in 500m radius
+winLength=ceil(500./N.DX); %find within 500m window
+fs.sdist2 = colfilt(fs.sdist, [winLength winLength], 'sliding', @max).*N.MASK;
 
 % SE=strel('disk',8,8);%8 cell radius, for example
 % nhood=SE.Neighborhood;
@@ -32,7 +46,7 @@ kcenter = ceil(m/2);
 % Cell with variable standard deviations of smoothing
 STSIZE = int16(fs.sdist); STSIZE(STSIZE==0)=1;
 st = cellfun(@(x) imgaussfiltNaN(A,x,'FilterSize',m),num2cell(st),'Unif',false);
-st
+
 %extract value from cells
 for ix=1:numel(A)
     B(ix) = st{STSIZE(ix)}(ix);
