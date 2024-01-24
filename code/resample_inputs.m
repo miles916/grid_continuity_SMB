@@ -44,3 +44,9 @@ function N = resample_inputs(DX,THX,V,DEM,DH)
     [DH.xN,DH.yN] = projfwd(THX.info,DH.LatG,DH.LonG); %compute projected coordinates
     N.DH = griddata(DH.xN(:),DH.yN(:),double(DH.dH3(:)),N.x3g(:),N.y3g(:),'natural');
     N.DH = reshape(N.DH,size(N.x3g));
+
+    %resample dHe
+    if exist('DH.dHunc')
+        N.DHe = griddata(DH.xN(:),DH.yN(:),double(DH.dHunc(:)),N.x3g(:),N.y3g(:),'natural');
+        N.DHe = reshape(N.DHe,size(N.x3g));
+    end
