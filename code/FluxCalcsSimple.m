@@ -77,9 +77,11 @@ function N=FluxCalcsSimple(N)
         N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
     elseif N.fdivfilt==3 %spatially-determined gradients
         N.FDIV0=N.FDIV;
-        [N.dUdx,~] = distfilter_gradient(N,N.Umean);
-        [~,N.dVdy] = distfilter_gradient(N,N.Vmean);
-        [N.dHdx,N.dHdy] = distfilter_gradient(N,N.THX);
+        N.Umean(N.MASK==0)=NaN;
+        N.Vmean(N.MASK==0)=NaN;
+        [N.dUdx,~] = distfilter_gradient_1d(N,N.Umean);
+        [~,N.dVdy] = distfilter_gradient_1d(N,N.Vmean);
+        [N.dHdx,N.dHdy] = distfilter_gradient_1d(N,N.THX);
         N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
     end
         

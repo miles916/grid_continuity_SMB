@@ -34,7 +34,7 @@ P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate sy
 DH.path = fullfile(homedir,'data_private',P.Glacier,'15.03733_dH.tif');
 DH.mult=1; %scale to convert input units to m/a
 THX.path = fullfile(homedir,'data_private',P.Glacier,'15.03733_THX.tif');
-DEM.path = fullfile(homedir,'data_private',P.Glacier,'15.03733_AW3D.tif');
+DEM.path = fullfile(homedir,'data_private',P.Glacier,'15.03733_DEM.tif');
 
 %settings
 P.plotouts=1; %output plots or not
@@ -46,7 +46,7 @@ P.dhfilter=0; %switch to peform 2x 3-sigma outlier removal (from overall dataset
 P.THXfilter=0; %switch to apply simply Gaussian filter to thickness data (useful for field thickness measurements)
 P.umult=0; %switch for column-average velocity [0.8-1] is physical range. '0' estimates based on THX dist. '2' estimates for each pixel. 
 % P.Vreproj=0; %0 if velocities are provided oriented in the correct coordinate system, 1 if they are in the source data projection, [2 if they are true north], [3 to determine from slope]
-P.fdivfilt=2; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
+P.fdivfilt=3; %use VanTricht gradient filters (2), just flux filter (1) or not at al (0)
 P.uncertainty=0; %0 for 'simple run without uncertainty, otherwise N runs; note that you will then need to setup perturbations within the N structure
 
 % initialization
