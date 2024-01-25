@@ -1,5 +1,4 @@
 function [Bx,By] = distfilter_gradient(N,A)
-%----------NOT FINISHED---------
 %distfilter_gradient - implements a variable-range determination of x and y
 %gradients overdistances according to 4x 'local' ice thickness
 %
@@ -42,24 +41,24 @@ kcenter = ceil(m/2);
 % Cell with variable standard deviations of smoothing
 STSIZE = int16(fs.sdist); STSIZE(STSIZE<=1)=2;%minimum distance for sliding filter
 
-% A(isnan(A))=0; % otherwise invalidates line processing
+A(isnan(A))=0; % otherwise invalidates line processing
 
-% Ay=reshape(A,[1,numel(A)]);
-dAdy = cellfun(@(x) gradient_vdist_NaN(A,x,'plane_fit',0)./-N.DX,num2cell(dAdy),'Unif',false); %negative because y axis is flipped
+Ay=reshape(A,[1,numel(A)]);
+dAdy = cellfun(@(x) movingslopeNaN(Ay,x,1,-N.DX),num2cell(dAdy),'Unif',false); %negative because y axis is flipped
 
-% Ax=reshape(A',[1,numel(A)]);
-dAdx = cellfun(@(x) gradient_vdist_NaN(A',x,'plane_fit',0)./N.DX,num2cell(dAdx),'Unif',false); 
+Ax=reshape(A',[1,numel(A)]);
+dAdx = cellfun(@(x) movingslopeNaN(Ax,x,1,N.DX),num2cell(dAdx),'Unif',false); 
 
 %extract value from cells
-for ix=1:numel(A)
+for ix=1:numel(Ay)
     Bx(ix) = dAdx{STSIZE(ix)-1}(ix);%-1 is because we start at 2
     By(ix) = dAdy{STSIZE(ix)-1}(ix);
 end
-Bx=reshape(Bx,size(A));
+Bx=reshape(Bx,size(A'))';
 By=reshape(By,size(A));
 
 
-figure;imagesc(Bx.*N.MASK);colorbar
-figure;imagesc(By.*N.MASK);colorbar
+% figure;imagesc(Bx.*N.MASK);colorbar
+% figure;imagesc(By.*N.MASK);colorbar
 
 end
