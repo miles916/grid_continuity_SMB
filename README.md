@@ -6,8 +6,9 @@ Includes example input data for Rongbuk Glacier.
 ## Prerequisites
 
 You need:
- - activated version of MATLAB (R2017a or more recent)
+ - activated version of MATLAB (R2017a or later)
  - Mapping Toolbox to ingest Geotiff information
+ - NOTE: This code uses Matlab functions that are deprecated since R2024b. 
 
 Other dependencies are included in /code
 
