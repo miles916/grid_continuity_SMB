@@ -84,11 +84,11 @@ zones=uint16(zones); %convert to uint16
 %% remove small zones, display
 zones = remove_small_zones(zones,mask,floor(30.*(dx/50.^2))); %function to remove orphaned pixels
 
-figure;
-imagesc(zones.*uint16(mask)); colorbar;
-axis square
-% set(gca,'ydir','normal')
-colormap([0,0,0;lines(256)])
-% caxis([0,length(zonelist)])
-% linkaxes([a1,a2],'xy')
+% figure;
+% imagesc(zones.*uint16(mask)); colorbar;
+% axis square
+% % set(gca,'ydir','normal')
+% colormap([0,0,0;lines(256)])
+% % caxis([0,length(zonelist)])
+% % linkaxes([a1,a2],'xy')
 

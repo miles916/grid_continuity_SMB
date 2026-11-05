@@ -197,23 +197,19 @@ for i = 1:s
   t = (1:supportlength)' - i;
   coef = getcoef(t,supportlength,modelorder);
   
-%   Dvec(i) = coef*vec(1:supportlength); %original
-  
+  % NaNs count as zero, as in the filtered interior; dividing by coef*W
+  % (a derivative kernel applied to weights, ~0 when there are no NaNs) blew up
   V=vec(1:supportlength);
-  nans=isnan(V);
-  V(nans)=0;
-  W=1-nans;
-
-  VV = coef*V;  
-  WW = coef*W;
-%   Dvec(i) = coef*vec(1:supportlength); %original
-  Dvec(i) = VV./WW;
+  V(isnan(V))=0;
+  Dvec(i) = coef*V;
 
   % patch the end points
   if i<(s + parity)
     t = (1:supportlength)' - supportlength + i - 1;
     coef = getcoef(t,supportlength,modelorder);
-    Dvec(n - i + 1) = coef*vec(n + (0:(supportlength-1)) + 1 - supportlength);
+    V=vec(n + (0:(supportlength-1)) + 1 - supportlength);
+    V(isnan(V))=0;
+    Dvec(n - i + 1) = coef*V;
   end
 end
 % scale by the supplied spacing

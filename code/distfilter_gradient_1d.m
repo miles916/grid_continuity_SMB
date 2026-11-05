@@ -19,7 +19,7 @@ function [Bx,By] = distfilter_gradient(N,A)
 % Sep 2023; Last revision: 20-Dec-2023
 
 % construct special filter
-fs.L = 4; %length of filter area in ice thicknesses*velocity - assume symmetrical for now
+fs.L = 1; %length of filter area in ice thicknesses (window length, in pixels, is L*thickness/DX)
 % fs.W = 1; %width of filter area in ice thicknesses
 % fs.theta = atan2(N.V,N.U);
 
@@ -53,10 +53,14 @@ dAdx = cellfun(@(x) movingslopeNaN(Ax,x,1,N.DX),num2cell(dAdx),'Unif',false);
 Bx=zeros(1,numel(Ay));
 By=zeros(1,numel(Ay));
 winidx=double(STSIZE(:)')-1;%-1 is because we start at 2
+winidxT=double(reshape(STSIZE',1,[]))-1; %Ax is flattened from A', so its window sizes must be taken in the same layout
 for k=unique(winidx)
     sel=(winidx==k);
-    Bx(sel) = dAdx{k}(sel);
     By(sel) = dAdy{k}(sel);
+end
+for k=unique(winidxT)
+    sel=(winidxT==k);
+    Bx(sel) = dAdx{k}(sel);
 end
 Bx=reshape(Bx,size(A'))';
 By=reshape(By,size(A));

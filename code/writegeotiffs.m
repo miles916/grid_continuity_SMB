@@ -11,42 +11,42 @@ catch
     Glacier=P;
 end
     % DEM
-    geotiffwrite([Glacier '_DEM.tif'],uint16(N.DEM),N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_DEM.tif'],uint16(N.DEM),N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % THX
-    geotiffwrite([Glacier '_THX.tif'],N.THX,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_THX.tif'],N.THX,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % VEL
-    geotiffwrite([Glacier '_Smean.tif'],N.Smean,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_Smean.tif'],N.Smean,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % dH
-    geotiffwrite([Glacier '_dH.tif'],N.DH,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_dH.tif'],N.DH,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % FDIV
-    geotiffwrite([Glacier '_FDIV.tif'],N.FDIV,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_FDIV.tif'],N.FDIV,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % SMB
-    geotiffwrite([Glacier '_SMB.tif'],N.SMB,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_SMB.tif'],N.SMB,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % Zones
-    geotiffwrite([Glacier '_zones.tif'],uint16(N.zones),N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_zones.tif'],uint16(N.zones),N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % zFDIV
-    geotiffwrite([Glacier '_zFDIV.tif'],N.z2fdiv,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_zFDIV.tif'],N.z2fdiv,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     % zSMB
-    geotiffwrite([Glacier '_zSMB.tif'],N.SMBz2,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+    geotiffwrite([Glacier '_zSMB.tif'],N.SMBz2,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
     if P.uncertainty>0
         % FDIVu
-        geotiffwrite([Glacier '_FDIVu.tif'],N.FDIVu,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+        geotiffwrite([Glacier '_FDIVu.tif'],N.FDIVu,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
         % SMBu
-        geotiffwrite([Glacier '_SMBu.tif'],N.SMBu,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+        geotiffwrite([Glacier '_SMBu.tif'],N.SMBu,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
         % zFDIVu
-        geotiffwrite([Glacier '_zFDIVu.tif'],N.z2fdiv_unc,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+        geotiffwrite([Glacier '_zFDIVu.tif'],N.z2fdiv_unc,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
         % zSMB
-        geotiffwrite([Glacier '_zSMBu.tif'],N.SMBz2_unc,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , Tiff.Compression.Deflate))
+        geotiffwrite([Glacier '_zSMBu.tif'],N.SMBz2_unc,N.Rout,'GeoKeyDirectoryTag',THX.info.GeoTIFFTags.GeoKeyDirectoryTag,'TiffTags' , struct ( 'Compression' , 'deflate'))
 
     end

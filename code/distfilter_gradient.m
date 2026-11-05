@@ -30,7 +30,7 @@ else
 end
 
 % construct special filter
-fs.L = 4; %length of filter area in ice thicknesses
+fs.L = 1; %length of filter area in ice thicknesses (window radius, in pixels, is L*thickness/DX)
 fs.sdist=ceil(fs.L.*N.THX./N.DX); %local thickness in pixel-equivalent
 fs.smax=nanmax(fs.sdist(:)); %maximum distance in pixel-equivalent
 
@@ -61,20 +61,21 @@ for sz_radius = unique_sizes'
     % Relative coordinates for the window
     [x_grid, y_grid] = meshgrid(-k:k, -k:k);
     
-    % Kernels for weighted sums
-    % Weights W are applied to the A_val and the coordinate kernels
+    % Kernels for weighted sums. conv2 flips its kernel, so the odd-order
+    % coordinate kernels are rotated 180 degrees to get true window offsets
+    xk = rot90(x_grid,2); yk = rot90(y_grid,2);
     
     % Compute sums using convolution with coordinate kernels
     S_w  = conv2(W, ones(sz), 'same');
-    S_x  = conv2(W, x_grid, 'same');
-    S_y  = conv2(W, y_grid, 'same');
+    S_x  = conv2(W, xk, 'same');
+    S_y  = conv2(W, yk, 'same');
     S_xx = conv2(W, x_grid.^2, 'same');
     S_yy = conv2(W, y_grid.^2, 'same');
     S_xy = conv2(W, x_grid .* y_grid, 'same');
     
     S_z  = conv2(A_val .* W, ones(sz), 'same');
-    S_xz = conv2(A_val .* W, x_grid, 'same');
-    S_yz = conv2(A_val .* W, y_grid, 'same');
+    S_xz = conv2(A_val .* W, xk, 'same');
+    S_yz = conv2(A_val .* W, yk, 'same');
     
     % Solve 3x3 system for each pixel in this group
     idx = find(STSIZE == sz_radius);
