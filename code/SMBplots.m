@@ -4,7 +4,7 @@ cmap = cbrewer('div','RdBu',21);
     cmap2 = [flipud(cbrewer('seq','Reds',11));cbrewer('seq','Blues',5)];
 % cmap = [0,0,0;cbrewer('div','RdBu',21);0,0,0];
 
-    Nout = 'grid-emergence'
+    Nout = 'grid-emergence';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(-1.*N.FDIV)
@@ -13,7 +13,7 @@ cmap = cbrewer('div','RdBu',21);
     caxis([-5,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
-    Nout = 'EL-zones'
+    Nout = 'EL-zones';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.zones)
@@ -23,7 +23,7 @@ cmap = cbrewer('div','RdBu',21);
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     
     %
-    Nout = 'EL-zone-avg-emergence'
+    Nout = 'EL-zone-avg-emergence';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(-1.*N.z2fdiv)
@@ -32,7 +32,7 @@ cmap = cbrewer('div','RdBu',21);
     caxis([-5,5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
    
-    Nout = 'grid-dh'
+    Nout = 'grid-dh';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.DH)
@@ -41,7 +41,7 @@ cmap = cbrewer('div','RdBu',21);
     caxis([-5,2.5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
-    Nout = 'grid-SMB'
+    Nout = 'grid-SMB';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.SMB)
@@ -50,7 +50,7 @@ cmap = cbrewer('div','RdBu',21);
     caxis([-5,2.5])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
-    Nout = 'grid-Hdensity'
+    Nout = 'grid-Hdensity';
     Ntitle = [Nout ' (1000 km m^{-3}), ' outtitle1];
     figure
     imagesc((N.Hdensity))
@@ -59,7 +59,7 @@ cmap = cbrewer('div','RdBu',21);
     caxis([.5,1])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
     %
-    Nout = 'thx'
+    Nout = 'thx';
     Ntitle = [Nout ' (m), ' outtitle1];
     figure
     imagesc(N.THX)
@@ -68,7 +68,7 @@ cmap = cbrewer('div','RdBu',21);
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
     %
-    Nout = 'EL-zonal-SMB'
+    Nout = 'EL-zonal-SMB';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.SMBz2)
@@ -78,7 +78,7 @@ cmap = cbrewer('div','RdBu',21);
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
 
     %
-    Nout = 'surface-speed'
+    Nout = 'surface-speed';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     figure
     imagesc(N.Smean)
@@ -86,8 +86,46 @@ cmap = cbrewer('div','RdBu',21);
     title(Ntitle)
     caxis([0,100])
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+
+    if isfield(N,'sigU') && any(N.sigU(:)>0)
+        Nout = 'input-uncertainty-VX';
+        figure
+        inputUncertainty = N.sigU;
+        inputUncertainty(~N.MASK) = NaN;
+        imagesc(inputUncertainty)
+        colorbar
+        title(['Input VX uncertainty (m a^{-1}), ' outtitle1])
+        saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+    end
+    if isfield(N,'sigV') && any(N.sigV(:)>0)
+        Nout = 'input-uncertainty-VY';
+        figure
+        inputUncertainty = N.sigV;
+        inputUncertainty(~N.MASK) = NaN;
+        imagesc(inputUncertainty)
+        colorbar
+        title(['Input VY uncertainty (m a^{-1}), ' outtitle1])
+        saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+    end
+    if isfield(N,'SMBu') && isfield(N,'FDIVu')
+        Nout = 'grid-SMB-uncertainty';
+        figure
+        imagesc(N.SMBu)
+        colorbar
+        title(['SMB uncertainty (m i.e. a^{-1}), ' outtitle1])
+        saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+
+        Nout = 'grid-FDIV-uncertainty';
+        figure
+        imagesc(N.FDIVu)
+        colorbar
+        title(['FDIV uncertainty (m i.e. a^{-1}), ' outtitle1])
+        saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+
+        plotElevationUncertainty(N,Glacier,outtitle1)
+    end
     %
-    Nout = 'SMB-EL'
+    Nout = 'SMB-EL';
     Ntitle = [Nout ' (m a^{-1}), ' outtitle1];
     iN = find(N.MASK);
     figure;
@@ -98,59 +136,61 @@ cmap = cbrewer('div','RdBu',21);
     title(Ntitle)
     legend('gridded SMB','zonal SMB','elevation fluxes')
     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
-     %% plot SMB curves and fluxes with elevation
-   
-    dZ=25;
-    ELS=dZ*[floor(min(N.DEM(iN)/dZ)):ceil(max(N.DEM(iN)/dZ))];
-    elSMBg = zeros(1,length(ELS)-1);
-    elSMBz = zeros(1,length(ELS)-1);
-    elSMBe = zeros(1,length(ELS)-1);
-    hyps = zeros(1,length(ELS)-1);
-    for iel=1:length(ELS)-1
-        cIN=N.MASK&(N.DEM>=ELS(iel))&(N.DEM<ELS(iel+1));
-        hyps(iel)=nansum((cIN(:)));
-        elSMBg(iel)=nanmean(N.SMB(cIN));
-        elSMBz(iel)=nanmean(N.SMBz2(cIN));
-        elSMBe(iel)=nanstd(N.SMB(cIN));
-    end
-    ELS2=unique(dZ.*floor(N.DEM(iN)./dZ));
-    
-    Nout = 'SMB-EL-fluxes'
-    Ntitle = [Nout ', ' outtitle1];
-    figure;
-    yyaxis left
+    %  %% plot SMB curves and fluxes with elevation
+    % 
+    % dZ=25;
+    % ELS=dZ*[floor(min(N.DEM(iN)/dZ)):ceil(max(N.DEM(iN)/dZ))];
+    % elSMBg = zeros(1,length(ELS)-1);
+    % elSMBz = zeros(1,length(ELS)-1);
+    % elSMBe = zeros(1,length(ELS)-1);
+    % hyps = zeros(1,length(ELS)-1);
+    % for iel=1:length(ELS)-1
+    %     cIN=N.MASK&(N.DEM>=ELS(iel))&(N.DEM<ELS(iel+1));
+    %     hyps(iel)=nansum((cIN(:)));
+    %     elSMBg(iel)=nanmean(N.SMB(cIN));
+    %     elSMBz(iel)=nanmean(N.SMBz2(cIN));
+    %     elSMBe(iel)=nanstd(N.SMB(cIN));
+    % end
+
+    % ELS2=unique(dZ.*floor(N.DEM(iN)./dZ));
+    % 
+    % Nout = 'SMB-EL-fluxes'
+    % Ntitle = [Nout ', ' outtitle1];
+    % figure;
+    % yyaxis left
 %     plot(ELS(1:end-1)+dZ/2,elSMBg,'b');hold on
 %     plot(ELS(1:end-1)+dZ/2,elSMBz,'k');hold on
-    try
-        boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2);hold on
-        ylabel('SMB m/a')
-%     ylim([-20,10])
-    yyaxis right
-    plot(N.ELs,N.ELfluxes,'linewidth',2)
-    ylim([0,3*max(N.ELfluxes)])
-    ylabel('Flux m^3/a')
-    title(Ntitle)
-%     legend('gridded','zonal','flux','location','southeast')
-%     legend('flux','location','southeast')
-    set(gca,'XTick',1000.*floor(min(N.DEM(iN)./1000)):500:1000.*ceil(max(N.DEM(iN)./1000)))
-    set(gca,'XTickLabel',get(gca,'XTick'))
-    saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
-    catch
-try     
-    boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2(1:end-1));hold on
-    ylabel('SMB m/a')
-%     ylim([-10,5])
-    yyaxis right
-    plot(N.ELs,N.ELfluxes,'linewidth',2)
-    ylim([0,3*max(N.ELfluxes)])
-    ylabel('Flux m^3/a')
-    title(Ntitle)
-%     legend('gridded','zonal','flux','location','southeast')
-%     legend('flux','location','southeast')
-    set(gca,'XTick',1000.*floor(min(N.DEM(iN)./1000)):500:1000.*ceil(max(N.DEM(iN)./1000)))
-    set(gca,'XTickLabel',get(gca,'XTick'))
-    saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
-catch
-end
+%     try
+%         boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2);hold on
+%         ylabel('SMB m/a')
+% %     ylim([-20,10])
+%     yyaxis right
+%     plot(N.ELs,N.ELfluxes,'linewidth',2)
+%     ylim([0,3*max(N.ELfluxes)])
+%     ylabel('Flux m^3/a')
+%     title(Ntitle)
+% %     legend('gridded','zonal','flux','location','southeast')
+% %     legend('flux','location','southeast')
+%     set(gca,'XTick',1000.*floor(min(N.DEM(iN)./1000)):500:1000.*ceil(max(N.DEM(iN)./1000)))
+%     set(gca,'XTickLabel',get(gca,'XTick'))
+%     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+%     catch
+% try     
+%     boxplot(N.SMB(iN),dZ.*floor(N.DEM(iN)./dZ),'Positions',ELS2(1:end-1));hold on
+%     ylabel('SMB m/a')
+% %     ylim([-10,5])
+%     yyaxis right
+%     plot(N.ELs,N.ELfluxes,'linewidth',2)
+%     ylim([0,3*max(N.ELfluxes)])
+%     ylabel('Flux m^3/a')
+%     title(Ntitle)
+% %     legend('gridded','zonal','flux','location','southeast')
+% %     legend('flux','location','southeast')
+%     set(gca,'XTick',1000.*floor(min(N.DEM(iN)./1000)):500:1000.*ceil(max(N.DEM(iN)./1000)))
+%     set(gca,'XTickLabel',get(gca,'XTick'))
+%     saveas(gcf,[Glacier '_' Nout '_' outtitle1 '.png'])
+% catch
+% end
+% end
 end
     

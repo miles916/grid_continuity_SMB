@@ -106,7 +106,7 @@ function N=FluxCalcsSimple(N)
         % filter with varying search distance, respecting NaNs
         N.FDIV0=N.FDIV;
         [N.FDIV,N.delFDIV] = flowfilter_varsig(N,N.FDIV);
-        disp(num2str(N.delFDIV,5))
+        % delFDIV is stored in N; not printed to keep MC progress output readable
     end
     % filter based on local velocity
     
@@ -153,7 +153,6 @@ function N=FluxCalcsSimple(N)
     N.FDIVx((N.MASK==0))=NaN;
     N.FDIVy((N.MASK==0))=NaN;
     N.SMB((N.MASK==0))=NaN;
-    N.zDH((N.MASK==0))=NaN;
     N.SMBz2((N.MASK==0))=NaN;
     N.z2DH((N.MASK==0))=NaN;
     N.z2fdiv((N.MASK==0))=NaN;

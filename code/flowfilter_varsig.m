@@ -19,7 +19,7 @@ function [B,misfit] = flowfilter_varsig(N,A)
 % Sep 2020; Last revision: 20-Dec-2023
 
 % construct special filter
-fs.L = 4; %length of filter area in ice thicknesses*velocity - assume symmetrical for now
+fs.L = 4; %length of filter area in ice thicknesses - assume symmetrical for now
 % fs.W = 1; %width of filter area in ice thicknesses
 % fs.theta = atan2(N.V,N.U);
 
@@ -46,7 +46,11 @@ fs.smax=nanmax(fs.sdist(:)); %maximum distance in pixel-equivalent
 
 % %determine maximum value in Xm radius
 winLength=ceil(250./N.DX); %find within 500m window
-fs.sdist = colfilt(fs.sdist, [winLength winLength], 'sliding', @max).*N.MASK;
+if winLength > 1 % a 1x1 max window is the identity (and breaks colfilt)
+    fs.sdist = colfilt(fs.sdist, [winLength winLength], 'sliding', @max).*N.MASK;
+else
+    fs.sdist = fs.sdist.*N.MASK;
+end
 
 % SE=strel('disk',8,8);%8 cell radius, for example
 % nhood=SE.Neighborhood;
