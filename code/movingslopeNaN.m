@@ -204,10 +204,10 @@ for i = 1:s
   V(nans)=0;
   W=1-nans;
 
-  VV(i) = coef*V;  
-  WW(i) = coef*W;
+  VV = coef*V;  
+  WW = coef*W;
 %   Dvec(i) = coef*vec(1:supportlength); %original
-  Dvec(i) = VV(i)./WW(i);
+  Dvec(i) = VV./WW;
 
   % patch the end points
   if i<(s + parity)

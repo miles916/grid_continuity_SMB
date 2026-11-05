@@ -9,7 +9,10 @@ function [THX,DEM,V,DH]=load_subset_all(P,THX,DEM,V,DH)
 %     THX.yp=1:THX.info.Height;
 %     [THX.xm,~] = pix2map(THX.R,ones(size(THX.xp)),THX.xp);
 %     [~,THX.ym] = pix2map(THX.R,THX.yp,ones(size(THX.yp)));
-    [THX.xm,THX.ym] = pixcenters(THX.R,[THX.info.Height,THX.info.Width]);
+    % pixel-center coordinates from the referencing matrix, [x y] = [row col 1]*R
+    % (replaces pixcenters, which was removed from the Mapping Toolbox)
+    THX.xm = THX.R(1,1) + THX.R(3,1) + THX.R(2,1).*(1:THX.info.Width);
+    THX.ym = THX.R(1,2).*(1:THX.info.Height) + THX.R(2,2) + THX.R(3,2);
     [THX.xmG,THX.ymG] = meshgrid(THX.xm,THX.ym);
     [THX.LatG,THX.LonG] = projinv(THX.info,THX.xmG(:),THX.ymG(:));
     
@@ -27,8 +30,8 @@ function [THX,DEM,V,DH]=load_subset_all(P,THX,DEM,V,DH)
         %set up velocity coordinates
     V.xp=1:V.info.Width;
     V.yp=1:V.info.Height;
-    [V.xm,~] = pix2map(V.R,ones(size(V.xp)),V.xp);
-    [~,V.ym] = pix2map(V.R,V.yp,ones(size(V.yp)));
+    V.xm = V.R(1,1) + V.R(3,1) + V.R(2,1).*V.xp; %same as the removed pix2map
+    V.ym = V.R(1,2).*V.yp + V.R(2,2) + V.R(3,2);
     [V.PixelRegion,V.LatG,V.LonG,V.xmG,V.ymG] = subset_geo(V.info,BBoxLL);
 
         %read velocity data and scale and filter if needed

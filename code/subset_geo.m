@@ -25,8 +25,10 @@ function [PixelRegion,LatG,LonG,xmG1,ymG1] = subset_geo(info,BBoxLL)
 %pixel map coordinates for raster to be subset
 xp = [1:info.Width];
 yp = [1:info.Height]; %pixel coordinates are cell centers
-[xm,~] = pix2map(info.RefMatrix,ones(size(xp)),xp);
-[~,ym] = pix2map(info.RefMatrix,yp,ones(size(yp)));
+%same as the removed pix2map: [x y] = [row col 1]*RefMatrix
+R = info.RefMatrix;
+xm = R(1,1) + R(3,1) + R(2,1).*xp;
+ym = R(1,2).*yp + R(2,2) + R(3,2);
 [xmG,ymG] = meshgrid(xm,ym);
 
 %transform to geographic coordinates 
