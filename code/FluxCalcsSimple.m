@@ -76,13 +76,25 @@ function N=FluxCalcsSimple(N)
         N.dHdx = flowfilter_varsig(N,N.dHdx);
         N.dHdy = flowfilter_varsig(N,N.dHdy);
         N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
-    elseif N.fdivfilt==3 %spatially-determined gradients
+    elseif N.fdivfilt==3 %spatially-determined gradients (1D)
         N.FDIV0=N.FDIV;
         N.Umean(outMask)=NaN;
         N.Vmean(outMask)=NaN;
         [N.dUdx,~] = distfilter_gradient_1d(N,N.Umean);
         [~,N.dVdy] = distfilter_gradient_1d(N,N.Vmean);
         [N.dHdx,N.dHdy] = distfilter_gradient_1d(N,N.THX);
+        N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
+    elseif N.fdivfilt==4 %spatially-determined gradients (2D Plane Fit)
+        N.FDIV0=N.FDIV;
+        N.Umean(outMask)=NaN;
+        N.Vmean(outMask)=NaN;
+        
+        % Calculate SIA weights
+        SIA_weights = calculate_SIA_weights(N);
+        
+        [N.dUdx,~] = distfilter_gradient(N,N.Umean,SIA_weights);
+        [~,N.dVdy] = distfilter_gradient(N,N.Vmean,SIA_weights);
+        [N.dHdx,N.dHdy] = distfilter_gradient(N,N.THX,SIA_weights);
         N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
     end
         
@@ -92,22 +104,15 @@ function N=FluxCalcsSimple(N)
     
     %% filter FDIV 
     if N.fdivfilt>=1
-    % %filter respecting NaNs
-    %     rad1=nanmax(N.THX(N.MASK));%     find max thx, radius
-    %     rad2=nanmean(N.Smean(N.MASK));%     find max thx, radius
-    %     dist=3*ceil(rad1./N.DX).*ceil(rad2./N.DX);
-    %     N.FDIV0=N.FDIV;
-    %     N.FDIV=imgaussfiltNaN(N.FDIV,dist); %gaussian filter 
-    % %      N.FDIV=ndnanfilter(N.FDIV,@rectwin,[dist],1); %rectangular
-    % % %     averaging filter, operates on columns!
-    % %      N.FDIV=ndnanfilter(N.FDIV,@rectwin,[dist],2); %rectangular
-    % % %     averaging filter, operates on rows!
-    %     N.FDIV=N.FDIV-nanmean(N.FDIV(:)); %rescale so that the integral is 0
-
         % filter with varying search distance, respecting NaNs
         N.FDIV0=N.FDIV;
         [N.FDIV,N.delFDIV] = flowfilter_varsig(N,N.FDIV);
-        disp(num2str(N.delFDIV,5))
+        disp(['Filter mismatch (mean): ', num2str(N.delFDIV,5)])
+        
+        % Integral conservation correction: force mean FDIV over mask to be 0
+        N.integral_correction = nanmean(N.FDIV(N.MASK));
+        N.FDIV(N.MASK) = N.FDIV(N.MASK) - N.integral_correction;
+        disp(['Integral correction applied: ', num2str(N.integral_correction,5)])
     end
     % filter based on local velocity
     

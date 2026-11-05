@@ -1,4 +1,4 @@
-function N=FluxCalcsUncertainty(N,nr) 
+function N=FluxCalcsUncertainty(N) 
 %FluxCalcsUncertainty.m - Function to estimate surface mass balance
 % distribution for a glacier from inputs of ice thickness, thinning, and
 % velocity, based on the continuity equation (see, e.g. Bisset et al, 2020: https://doi.org/10.3390/rs12101563)
@@ -9,6 +9,8 @@ function N=FluxCalcsUncertainty(N,nr)
 %       sigTHX - uncertainty of ice thickness in terms of systematic bias (percent)
 %       sigTHX2 - uncertainty of ice thickness in terms of random error (m)
 %       sigDH - uncertainty of thinning (m/a)
+%       GRF_Lcorr_V_DH - correlation length for U, V, DH noise (m)
+%       GRF_Lcorr_THX_mult - correlation length for THX noise (multiple of mean THX)
 % The code then runs through nr randomly-chosen parameter sets.
 %
 % Other m-files required: C2xyz.m, index_nanfill.m, remove_small_zones.m,
@@ -17,7 +19,7 @@ function N=FluxCalcsUncertainty(N,nr)
 % Author: Evan Miles
 % Work address: Swiss Federal Research Institute WSL
 % Email: evan.miles@wsl.ch
-% Sep 2019; Last revision: 16-June-2020
+% Sep 2019; Last revision: 05-Nov-2026
 
 %% baseline calculations for unperturbed case
     N.Smean=N.umult.*N.S;
@@ -37,12 +39,14 @@ function N=FluxCalcsUncertainty(N,nr)
     tFDIV=zeros([size(N.THX),nr]);
     tSMB=zeros([size(N.THX),nr]);
     tHdensity=zeros([size(N.THX),nr]);
+    tFDIV0=zeros([size(N.THX),nr]);
     tdelFDIV=nan(nr,1); %mean change in FDIV from the filter, per run
+    tIntCorr=nan(nr,1); %integral correction per run
     
-    %random thickness perturbations for all runs, drawn up front so that parfor results do not depend on worker streams.
-    %Draws come from the same stream in the same order as sequential per-run randn(size(THX)) calls
-    THXrand=randn([size(N.THX),nr]);
-    
+    % Correlation lengths in pixels
+    sig_pix_V_DH = N.GRF_Lcorr_V_DH / N.DX;
+    sig_pix_THX = (N.GRF_Lcorr_THX_mult * nanmean(N.THX(N.MASK))) / N.DX;
+
     dx = mode(diff(N.x3));
     dy = mode(diff(N.y3));
     
@@ -51,13 +55,34 @@ function N=FluxCalcsUncertainty(N,nr)
     parfor irun=1:nr
         C=N;
 
-        %	determine MC adjustments
+        %	determine MC adjustments (systematic/scalar)
         C.umult=icdf('normal',prns(irun,1),N.umult,N.sigUmult);
         C.THXmult=icdf('normal',(prns(irun,2)),1,N.sigTHX); %extra to determine scaling up or down
-        C.THXrand=THXrand(:,:,irun).*N.sigTHX2; %extra to determine random adjustments
-        C.Uadd=icdf('normal',(prns(irun,3)),0,N.sigU); %extra to determine random adjustments
-        C.Vadd=icdf('normal',(prns(irun,4)),0,N.sigV); %extra to determine random adjustments
-        C.dHadd=icdf('normal',(prns(irun,5)),0,N.sigDH); %extra to determine random adjustments
+        
+        %   determine MC adjustments (spatially correlated or independent random fields)
+        if sig_pix_V_DH > 0
+            % Spatially correlated noise (GRF)
+            Uadd_f = imgaussfilt(randn(size(N.THX)), sig_pix_V_DH);
+            C.Uadd = Uadd_f .* (N.sigU / std(Uadd_f(N.MASK)));
+            
+            Vadd_f = imgaussfilt(randn(size(N.THX)), sig_pix_V_DH);
+            C.Vadd = Vadd_f .* (N.sigV / std(Vadd_f(N.MASK)));
+            
+            dHadd_f = imgaussfilt(randn(size(N.THX)), sig_pix_V_DH);
+            C.dHadd = dHadd_f .* (N.sigDH / std(dHadd_f(N.MASK)));
+        else
+            % Independent random noise
+            C.Uadd=randn(size(N.THX)).*N.sigU;
+            C.Vadd=randn(size(N.THX)).*N.sigV;
+            C.dHadd=randn(size(N.THX)).*N.sigDH;
+        end
+        
+        if sig_pix_THX > 0
+            THXrand_f = imgaussfilt(randn(size(N.THX)), sig_pix_THX);
+            C.THXrand = THXrand_f .* (N.sigTHX2 / std(THXrand_f(N.MASK)));
+        else
+            C.THXrand=randn(size(N.THX)).*N.sigTHX2;
+        end
         
         %   determine current inputs to flux calcs
         C.Umean=(C.U+C.Uadd).*C.umult;
@@ -72,23 +97,30 @@ function N=FluxCalcsUncertainty(N,nr)
         tFDIV(:,:,irun)=C.FDIV;
         tSMB(:,:,irun)=C.SMB;
         tHdensity(:,:,irun)=C.Hdensity;
+        if isfield(C,'FDIV0')
+            tFDIV0(:,:,irun)=C.FDIV0;
+        end
         if isfield(C,'delFDIV')
             tdelFDIV(irun)=C.delFDIV;
+        end
+        if isfield(C,'integral_correction')
+            tIntCorr(irun)=C.integral_correction;
         end
     end
     toc
     N.runtime_MC=toc(tMC);
-    clear THXrand
     %% postprocess MC stack into N
     N.SMB=nanmean(tSMB,3);
     N.FDIV=nanmean(tFDIV,3);
     N.Hdensity=nanmean(tHdensity,3);
+    N.FDIV0=nanmean(tFDIV0,3);
     
     N.SMBu=nanstd(tSMB,[],3);
     N.FDIVu=nanstd(tFDIV,[],3);
     N.Hdensityu=nanstd(tHdensity,[],3);
     N.delFDIV=mean(tdelFDIV,'omitnan'); %filter mismatch of the mean FDIV, mean and spread over runs
     N.delFDIVu=std(tdelFDIV,'omitnan');
+    N.integral_correction=mean(tIntCorr,'omitnan');
     
     N.Qdensity = 0.9; %900 kg m3 everywhere; 0.9 is actually the specific gravity
 
@@ -96,6 +128,9 @@ function N=FluxCalcsUncertainty(N,nr)
     N.z2DH = zonal_aggregate(N.zones,N.DH); % aggregates values in the zone - simple mean
     N.SMBz2= zonal_aggregate(N.zones,N.SMB); %aggregates values in the zone - simple mean
     
+    % Ensure uncertainties are grids for zonal aggregation
+    if isscalar(N.sigDH), sigDH_grid = N.sigDH .* N.MASK; else, sigDH_grid = N.sigDH; end
+    
     N.z2fdiv_unc = zonal_aggregate_v2(N.zones,N.FDIVu,'rssn'); % aggregates values in the zone - simple mean excluding NaNs; same result as perimeter integration
-    N.z2DH_unc = zonal_aggregate_v2(N.zones,N.sigDH,'rssn'); % aggregates values in the zone - simple mean
+    N.z2DH_unc = zonal_aggregate_v2(N.zones,sigDH_grid,'rssn'); % aggregates values in the zone - simple mean
     N.SMBz2_unc= zonal_aggregate_v2(N.zones,N.SMBu,'rssn'); %aggregates values in the zone - simple mean

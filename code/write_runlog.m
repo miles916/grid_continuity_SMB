@@ -101,6 +101,9 @@ switch action
         fprintf(fid,'Mean FDIV in output:        %.6g m/a (integrated %.6g m^3/a)\n',post,post.*area);
         if isfield(N,'delFDIV') && ~isnan(N.delFDIV)
             fprintf(fid,'Filter mismatch (mean after - before): %.6g m/a (integrated %.6g m^3/a)\n',N.delFDIV,N.delFDIV.*area);
+            if isfield(N,'integral_correction') && ~isnan(N.integral_correction)
+                fprintf(fid,'Integral conservation correction applied: %.6g m/a (integrated %.6g m^3/a)\n',N.integral_correction,N.integral_correction.*area);
+            end
             if isfield(N,'delFDIVu')
                 fprintf(fid,'  spread over Monte Carlo runs (std): %.6g m/a\n',N.delFDIVu);
             end

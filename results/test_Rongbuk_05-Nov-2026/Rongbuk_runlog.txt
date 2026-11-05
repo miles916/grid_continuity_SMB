@@ -1,0 +1,83 @@
+grid_continuity_SMB run log - Rongbuk
+Started: 2026-11-05 16:11:26
+
+== PROCESSOR SETUP ==
+MATLAB: 25.2.0.2998904 (R2025b)
+Platform: PCWIN64
+OS: Microsoft Windows 11 Pro
+CPU: AMD64 Family 26 Model 96 Stepping 0, AuthenticAMD
+Logical processors: 16
+MATLAB computational threads: 8
+Physical memory: 27.6 GB total, 3.3 GB available
+Parallel Computing Toolbox: available, no pool open at start
+
+== SETTINGS ==
+Glacier = Rongbuk
+plotouts = 1
+exports = 1
+DX = 50
+segdist = 300
+Vfilter = 0
+dhfilter = 0
+THXfilter = 0
+umult = 0
+Vreproj = 0
+fdivfilt = 4
+uncertainty = 0
+GRF_Lcorr_V_DH = 500
+GRF_Lcorr_THX_mult = 4
+
+== INPUT FILES ==
+C:\Users\miles\Documents\GitHub\grid_continuity_SMB\data\Rongbuk\HMA_G0120_vx.tif  (0.12 MB, modified 02-Nov-2026 10:24:09)
+C:\Users\miles\Documents\GitHub\grid_continuity_SMB\data\Rongbuk\HMA_G0120_vy.tif  (0.12 MB, modified 02-Nov-2026 10:24:09)
+C:\Users\miles\Documents\GitHub\grid_continuity_SMB\data\Rongbuk\15.09991_dH.tif  (0.22 MB, modified 02-Nov-2026 10:24:09)
+C:\Users\miles\Documents\GitHub\grid_continuity_SMB\data\Rongbuk\RGI60-15.09991_thickness_composite.tif  (0.43 MB, modified 02-Nov-2026 10:24:09)
+C:\Users\miles\Documents\GitHub\grid_continuity_SMB\data\Rongbuk\15.09991_AW3D.tif  (0.24 MB, modified 02-Nov-2026 10:24:09)
+
+== PROGRESS / TIMING (s) ==
+load_inputs                        1.79   (finished 2026-11-05 16:11:28)
+resample_and_prepare              11.46   (finished 2026-11-05 16:11:40)
+flux_calcs                         3.70   (finished 2026-11-05 16:11:43)
+plots                             28.65   (finished 2026-11-05 16:12:12)
+export                             0.75   (finished 2026-11-05 16:12:13)
+total                             46.64
+
+== GRID ==
+357 rows x 395 columns at 50 m; glacier mask 29257 pixels (73.142 km^2)
+
+== FLUX DIVERGENCE MISMATCH ==
+Mean FDIV before filtering: 0.0560898 m/a (integrated 4.10255e+06 m^3/a)
+Mean FDIV in output:        5.16181e-17 m/a (integrated 3.77548e-09 m^3/a)
+Filter mismatch (mean after - before): -0.0286298 m/a (integrated -2.09406e+06 m^3/a)
+Integral conservation correction applied: 0.02746 m/a (integrated 2.00849e+06 m^3/a)
+
+== OUTPUT FILES (C:\Users\miles\Documents\GitHub\grid_continuity_SMB\results\test_Rongbuk_05-Nov-2026) ==
+Rongbuk_DEM.tif  (0.15 MB)
+Rongbuk_EL-zonal-SMB_50mgrid.png  (0.03 MB)
+Rongbuk_EL-zonal-SMB_50mgrid.png.aux.xml  (0.00 MB)
+Rongbuk_EL-zone-avg-emergence_50mgrid.png  (0.04 MB)
+Rongbuk_EL-zones_50mgrid.png  (0.04 MB)
+Rongbuk_FDIV.tif  (0.22 MB)
+Rongbuk_FDIVu.tif  (0.22 MB)
+Rongbuk_SMB-EL_50mgrid.png  (0.09 MB)
+Rongbuk_SMB.tif  (0.22 MB)
+Rongbuk_SMB.tif.aux.xml  (0.00 MB)
+Rongbuk_SMBu.tif  (0.22 MB)
+Rongbuk_Smean.tif  (0.98 MB)
+Rongbuk_THX.tif  (0.13 MB)
+Rongbuk_dH.tif  (0.22 MB)
+Rongbuk_grid-Hdensity_50mgrid.png  (0.05 MB)
+Rongbuk_grid-SMB_50mgrid.png  (0.05 MB)
+Rongbuk_grid-SMB_50mgrid.png.aux.xml  (0.00 MB)
+Rongbuk_grid-dh_50mgrid.png  (0.05 MB)
+Rongbuk_grid-emergence_50mgrid.png  (0.04 MB)
+Rongbuk_surface-speed_50mgrid.png  (0.12 MB)
+Rongbuk_thx_50mgrid.png  (0.11 MB)
+Rongbuk_zFDIV.tif  (0.02 MB)
+Rongbuk_zFDIVu.tif  (0.02 MB)
+Rongbuk_zSMB.tif  (0.02 MB)
+Rongbuk_zSMB.tif.aux.xml  (0.00 MB)
+Rongbuk_zSMBu.tif  (0.02 MB)
+Rongbuk_zones.tif  (0.01 MB)
+
+Completed: 2026-11-05 16:12:13
