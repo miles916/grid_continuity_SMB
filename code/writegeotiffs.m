@@ -1,8 +1,10 @@
 function writegeotiffs(N,THX,P)
-if THX.info.GeoTIFFTags.GeoKeyDirectoryTag.GTRasterTypeGeoKey==1 %Matlab geotiffexport off by 1 pixel
-    N.Rout(3,1)=N.Rout(3,1)-N.DX;
-    N.Rout(3,2)=N.Rout(3,2)+N.DX;
-end
+% convert the georeferencing matrix to a map raster reference object, as required by current geotiffwrite
+nrow=size(N.DEM,1);ncol=size(N.DEM,2);
+Rm=N.Rout;
+xlim=[Rm(3,1)+Rm(2,1)./2, Rm(3,1)+Rm(2,1)./2+Rm(2,1).*ncol]; %cell centers lie at [x y]=[row col 1]*Rm
+ylim=[Rm(3,2)+Rm(1,2)./2+Rm(1,2).*nrow, Rm(3,2)+Rm(1,2)./2];
+N.Rout=maprefcells(xlim,ylim,Rm(2,1),-Rm(1,2),'ColumnsStartFrom','north');
 try
     Glacier=P.Glacier;
 catch

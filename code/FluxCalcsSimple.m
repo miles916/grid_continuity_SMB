@@ -20,6 +20,7 @@ function N=FluxCalcsSimple(N)
 %     N.S=sqrt(N.U.^2+N.V.^2);
     
 %% FLUX AND EMERGENCE CALCS 
+    outMask = (N.MASK==0); %pixels outside the glacier mask; computed once and reused
     N.Smean=N.umult.*N.S;
     N.Umean=N.umult.*N.U;
     N.Vmean=N.umult.*N.V;
@@ -60,10 +61,10 @@ function N=FluxCalcsSimple(N)
     [~,N.dVdy]=gradient(N.Vmean,dy);%N.dVdy=N.dVdy; 
     [N.dHdx,N.dHdy]=gradient(N.THX,dx,dy);
 
-    N.dUdx((N.MASK)==0)=NaN;
-    N.dVdy((N.MASK)==0)=NaN;
-    N.dHdx((N.MASK)==0)=NaN;
-    N.dHdy((N.MASK)==0)=NaN;
+    N.dUdx(outMask)=NaN;
+    N.dVdy(outMask)=NaN;
+    N.dHdx(outMask)=NaN;
+    N.dHdy(outMask)=NaN;
     
     N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
     if N.fdivfilt==2 %use spatially-filtered gradients
@@ -77,8 +78,8 @@ function N=FluxCalcsSimple(N)
         N.FDIV = (N.Umean.*N.dHdx+N.Vmean.*N.dHdy+N.THX.*N.dUdx+N.THX.*N.dVdy); %VanTrich eq 5 
     elseif N.fdivfilt==3 %spatially-determined gradients
         N.FDIV0=N.FDIV;
-        N.Umean(N.MASK==0)=NaN;
-        N.Vmean(N.MASK==0)=NaN;
+        N.Umean(outMask)=NaN;
+        N.Vmean(outMask)=NaN;
         [N.dUdx,~] = distfilter_gradient_1d(N,N.Umean);
         [~,N.dVdy] = distfilter_gradient_1d(N,N.Vmean);
         [N.dHdx,N.dHdy] = distfilter_gradient_1d(N,N.THX);
@@ -86,7 +87,7 @@ function N=FluxCalcsSimple(N)
     end
         
     %trim to mask
-    N.FDIV(N.MASK==0)=NaN;
+    N.FDIV(outMask)=NaN;
     
     
     %% filter FDIV 
@@ -130,14 +131,16 @@ function N=FluxCalcsSimple(N)
     ind2=(N.DH>0);
     ind3=(abs(N.DH)>abs(N.FDIV));
     ind4 = N.DEM>nanmedian(N.DEM(N.MASK));
+    ind1n2=ind1&~ind2; ind2n1=~ind1&ind2; ind12=ind1&ind2;
+    ind0=~ind1&~ind2;
     
-    N.Hdensity(ind1&~ind2)=0.9; %thinning and emergence = melt
-    N.Hdensity(~ind1&ind2)=0.6; %thickening and submergence = acc
-    N.Hdensity(ind1&ind2&ind3)=0.6; %emergence and thickening, more thickening - acc
-    N.Hdensity(ind1&ind2&~ind3)=0.85; %emergence and thickening, more thickening - mixed
-    N.Hdensity(~ind1&~ind2&ind3)=0.9; %submergence and thinning, more thinning - melt
-    N.Hdensity(~ind1&~ind2&~ind3)=0.85; %submergence and thinning, less thinning - mixed
-    N.Hdensity((ind4==0)&N.MASK)=0.9; % below median elevation
+    N.Hdensity(ind1n2)=0.9; %thinning and emergence = melt
+    N.Hdensity(ind2n1)=0.6; %thickening and submergence = acc
+    N.Hdensity(ind12&ind3)=0.6; %emergence and thickening, more thickening - acc
+    N.Hdensity(ind12&~ind3)=0.85; %emergence and thickening, more thickening - mixed
+    N.Hdensity(ind0&ind3)=0.9; %submergence and thinning, more thinning - melt
+    N.Hdensity(ind0&~ind3)=0.85; %submergence and thinning, less thinning - mixed
+    N.Hdensity(~ind4&N.MASK)=0.9; % below median elevation
    
      %% SMB
     
@@ -145,15 +148,15 @@ function N=FluxCalcsSimple(N)
     N.SMBz2= zonal_aggregate(N.zones,N.SMB); %aggregates values in the zone - simple mean
 
     %mask before plotting
-    N.DH((N.MASK==0))=NaN;
-    N.U((N.MASK==0))=NaN;
-    N.V((N.MASK==0))=NaN;
-    N.THX((N.MASK==0))=NaN;
-    N.FDIV((N.MASK==0))=NaN;
-    N.FDIVx((N.MASK==0))=NaN;
-    N.FDIVy((N.MASK==0))=NaN;
-    N.SMB((N.MASK==0))=NaN;
-    N.zDH((N.MASK==0))=NaN;
-    N.SMBz2((N.MASK==0))=NaN;
-    N.z2DH((N.MASK==0))=NaN;
-    N.z2fdiv((N.MASK==0))=NaN;
+    N.DH(outMask)=NaN;
+    N.U(outMask)=NaN;
+    N.V(outMask)=NaN;
+    N.THX(outMask)=NaN;
+    N.FDIV(outMask)=NaN;
+    N.FDIVx(outMask)=NaN;
+    N.FDIVy(outMask)=NaN;
+    N.SMB(outMask)=NaN;
+    N.zDH(outMask)=NaN;
+    N.SMBz2(outMask)=NaN;
+    N.z2DH(outMask)=NaN;
+    N.z2fdiv(outMask)=NaN;

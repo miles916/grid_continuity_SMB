@@ -36,24 +36,28 @@ function N=FluxCalcsUncertainty(N,nr)
 % initialize vars
     tFDIV=zeros([size(N.THX),nr]);
     tSMB=zeros([size(N.THX),nr]);
-    tHdens=zeros([size(N.THX),nr]);
+    tHdensity=zeros([size(N.THX),nr]);
+    tdelFDIV=nan(nr,1); %mean change in FDIV from the filter, per run
+    
+    %random thickness perturbations for all runs, drawn up front so that parfor results do not depend on worker streams.
+    %Draws come from the same stream in the same order as sequential per-run randn(size(THX)) calls
+    THXrand=randn([size(N.THX),nr]);
     
     dx = mode(diff(N.x3));
     dy = mode(diff(N.y3));
     
-%     loop through runs
-    tic
-    for irun=1:nr
-% irun =1
+%     loop through runs (independent, so run in parallel; runs serially if no pool/toolbox is available)
+    tMC=tic;
+    parfor irun=1:nr
         C=N;
 
         %	determine MC adjustments
         C.umult=icdf('normal',prns(irun,1),N.umult,N.sigUmult);
         C.THXmult=icdf('normal',(prns(irun,2)),1,N.sigTHX); %extra to determine scaling up or down
-        C.THXrand=randn(size(C.THX)).*N.sigTHX2; %extra to determine random adjustments
+        C.THXrand=THXrand(:,:,irun).*N.sigTHX2; %extra to determine random adjustments
         C.Uadd=icdf('normal',(prns(irun,3)),0,N.sigU); %extra to determine random adjustments
         C.Vadd=icdf('normal',(prns(irun,4)),0,N.sigV); %extra to determine random adjustments
-        C.dHadd=icdf('normal',(prns(irun,5)),0,N.sigV); %extra to determine random adjustments
+        C.dHadd=icdf('normal',(prns(irun,5)),0,N.sigDH); %extra to determine random adjustments
         
         %   determine current inputs to flux calcs
         C.Umean=(C.U+C.Uadd).*C.umult;
@@ -68,10 +72,13 @@ function N=FluxCalcsUncertainty(N,nr)
         tFDIV(:,:,irun)=C.FDIV;
         tSMB(:,:,irun)=C.SMB;
         tHdensity(:,:,irun)=C.Hdensity;
-        
-        clear C
+        if isfield(C,'delFDIV')
+            tdelFDIV(irun)=C.delFDIV;
+        end
     end
     toc
+    N.runtime_MC=toc(tMC);
+    clear THXrand
     %% postprocess MC stack into N
     N.SMB=nanmean(tSMB,3);
     N.FDIV=nanmean(tFDIV,3);
@@ -80,6 +87,8 @@ function N=FluxCalcsUncertainty(N,nr)
     N.SMBu=nanstd(tSMB,[],3);
     N.FDIVu=nanstd(tFDIV,[],3);
     N.Hdensityu=nanstd(tHdensity,[],3);
+    N.delFDIV=mean(tdelFDIV,'omitnan'); %filter mismatch of the mean FDIV, mean and spread over runs
+    N.delFDIVu=std(tdelFDIV,'omitnan');
     
     N.Qdensity = 0.9; %900 kg m3 everywhere; 0.9 is actually the specific gravity
 

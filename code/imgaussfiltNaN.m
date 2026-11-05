@@ -41,22 +41,33 @@ end
 
 %% set up U,V inputs
 nans=isnan(im); %find nans
-V=im; %duplicate, replace nanas with 0
-V(nans)=0;
-
-W=1-nans; %logical array where non-nan
+hasnans=any(nans(:));
+if hasnans
+    V=im; %duplicate, replace nanas with 0
+    V(nans)=0;
+    W=1-nans; %logical array where non-nan
+else
+    V=im;
+end
 
 %% filter both
 if exist('opts')
     VV=imgaussfilt(V,sig,opts);
-    WW=imgaussfilt(W,sig,opts);
 else
     VV=imgaussfilt(V,sig);
-    WW=imgaussfilt(W,sig);
 end
 
-%ratio is filtered data ignoring NaNs
-Z=VV./WW;
+if hasnans
+    if exist('opts')
+        WW=imgaussfilt(W,sig,opts);
+    else
+        WW=imgaussfilt(W,sig);
+    end
+    %ratio is filtered data ignoring NaNs
+    Z=VV./WW;
+else
+    Z=VV; %no NaNs: weights filter to 1 everywhere, so the normalization is skipped
+end
 
 if erasenans==1 %option to remove NaNs again or not
     Z(nans)=NaN;

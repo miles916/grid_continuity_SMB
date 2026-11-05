@@ -49,10 +49,14 @@ dAdy = cellfun(@(x) movingslopeNaN(Ay,x,1,-N.DX),num2cell(dAdy),'Unif',false); %
 Ax=reshape(A',[1,numel(A)]);
 dAdx = cellfun(@(x) movingslopeNaN(Ax,x,1,N.DX),num2cell(dAdx),'Unif',false); 
 
-%extract value from cells
-for ix=1:numel(Ay)
-    Bx(ix) = dAdx{STSIZE(ix)-1}(ix);%-1 is because we start at 2
-    By(ix) = dAdy{STSIZE(ix)-1}(ix);
+%extract value from cells; one pass per distinct window size rather than per pixel
+Bx=zeros(1,numel(Ay));
+By=zeros(1,numel(Ay));
+winidx=double(STSIZE(:)')-1;%-1 is because we start at 2
+for k=unique(winidx)
+    sel=(winidx==k);
+    Bx(sel) = dAdx{k}(sel);
+    By(sel) = dAdy{k}(sel);
 end
 Bx=reshape(Bx,size(A'))';
 By=reshape(By,size(A));

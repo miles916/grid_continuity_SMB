@@ -57,9 +57,16 @@ mkdir(outdir)
 
 outtitle1 = [num2str(P.DX) 'mgrid'];
 cd(outdir)
-    
+tTotal = tic; %timing for the run log
+inputs = {V.pathx,V.pathy,DH.path,THX.path,DEM.path};
+if isfield(V,'pathxe'), inputs = [inputs,{V.pathxe,V.pathye}]; end
+logfile = write_runlog('start',outdir,P,inputs); %log is appended to after each stage
+
+try
     %% Load all input data, resample to common grid, etc
+    tStage = tic;
     [THX,DEM,V,DH]=load_subset_all(P,THX,DEM,V,DH);
+    T.load_inputs = toc(tStage); write_runlog('stage',logfile,'load_inputs',T.load_inputs);
     
     %% Cleaning raw data if needed
     
@@ -88,6 +95,7 @@ cd(outdir)
     end
     
     %% REPROJECT AND RESAMPLE ALL INPUTS (to THX coordinate system), derive MASK, etc
+    tStage = tic;
     N = resample_inputs(P.DX,THX,V,DEM,DH);
     N.fdivfilt=P.fdivfilt;
     N.uncertainty=P.uncertainty;
@@ -105,26 +113,41 @@ cd(outdir)
 
     %% determine column-average velocity correction
     N = derive_umult(N,P);
+    T.resample_and_prepare = toc(tStage); write_runlog('stage',logfile,'resample_and_prepare',T.resample_and_prepare);
 
     %% SMB calculations
     cd(outdir)
 
+    tStage = tic;
     if N.uncertainty>1
         N=FluxCalcsUncertainty(N); %calculates fluxes 
     else
         N=FluxCalcsSimple(N); %calculates fluxes 
     end    
+    T.flux_calcs = toc(tStage); write_runlog('stage',logfile,'flux_calcs',T.flux_calcs);
 %% DETERMINE FLUXES THROUGH EACH ELEVATION BAND
 %     [N.ELA,N.FLout,N.cFLu,N.tFL,N.ELs,N.ELfluxes]=through_fluxes(N.MASK,N.DEM,N.Umean,N.Vmean,N.THX,N.DX);%,dy,sig_H,UE,VE,ERRORs)
 
+tStage = tic;
 if P.plotouts==1
     SMBplots(N,outtitle1,P.Glacier);
 end
+T.plots = toc(tStage); write_runlog('stage',logfile,'plots',T.plots);
 
     
     %% export geotifs
+tStage = tic;
 if P.exports==1
     writegeotiffs(N,THX,P)
+end
+T.export = toc(tStage); write_runlog('stage',logfile,'export',T.export);
+
+%% finish run log (grid, flux divergence mismatch, output files)
+T.total = toc(tTotal);
+write_runlog('finish',logfile,outdir,P,N,T);
+catch ME
+    write_runlog('error',logfile,ME);
+    rethrow(ME)
 end
 
 %%    

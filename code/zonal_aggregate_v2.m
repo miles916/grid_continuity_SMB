@@ -23,31 +23,29 @@ mask = isnan(zones); %find overall domain
 
 zVAR = zeros(size(VAR));  %initialize output
 
-zonelist = unique(zones(:)); %list of zones
+%one pass over the pixels instead of one full-grid comparison per zone
+inzone = ~mask;
+[~,~,zidx] = unique(zones(inzone)); %zone index for every pixel in the domain
+vals = double(VAR(inzone));
+nz = max(zidx);
+good = ~isnan(vals);
 
 switch method
     case 'mean'
-        for iz = 1:length(zonelist) %loop through zones and derive nanmean
-            cz = zonelist(iz);
-            curzone = (zones==cz);
-            cval = nanmean(VAR(curzone(:)==1));
-            zVAR(curzone(:)==1)=(cval);
-        end
+        zsum = accumarray(zidx(good),vals(good),[nz 1]);
+        zcnt = accumarray(zidx(good),1,[nz 1]);
+        zval = zsum./zcnt; %nan-ignoring mean
+        zVAR(inzone) = zval(zidx);
     case 'rms'
-        for iz = 1:length(zonelist)
-            cz = zonelist(iz);
-            curzone = (zones==cz);
-            cval = rms(VAR(curzone(:)==1));
-            zVAR(curzone(:)==1)=(cval);
-        end
+        zss = accumarray(zidx,vals.^2,[nz 1]); %NaNs propagate, as rms does
+        zcnt = accumarray(zidx,1,[nz 1]);
+        zval = sqrt(zss./zcnt);
+        zVAR(inzone) = zval(zidx);
     case 'rssn'
-        for iz = 1:length(zonelist)
-            cz = zonelist(iz);
-            curzone = (zones==cz);
-            select=(curzone)&(isnan(VAR)==0);
-            cval = sqrt(nansum(VAR(select).^2))./sum(select(:)); %root-sum-squared/N
-            zVAR(curzone(:)==1)=(cval);
-        end
+        zss = accumarray(zidx(good),vals(good).^2,[nz 1]);
+        zcnt = accumarray(zidx(good),1,[nz 1]);
+        zval = sqrt(zss)./zcnt; %root-sum-squared/N
+        zVAR(inzone) = zval(zidx);
 end
 
 zVAR(mask) = NaN;

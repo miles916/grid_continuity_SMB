@@ -22,14 +22,16 @@ mask = isnan(zones); %find overall domain
 
 zVAR = zeros(size(VAR)); %initialize output
 
-zonelist = unique(zones(:)); %list of zones
+%one pass over the pixels instead of one full-grid comparison per zone
+inzone = ~mask;
+[~,~,zidx] = unique(zones(inzone)); %zone index for every pixel in the domain
+vals = double(VAR(inzone));
+good = ~isnan(vals);
+nz = max(zidx);
+zsum = accumarray(zidx(good),vals(good),[nz 1]); %sum omitting NaNs
+zcnt = accumarray(zidx(good),1,[nz 1]); %count omitting NaNs
+zmean = zsum./zcnt; %NaN for zones with no valid values, as nanmean
 
-%loop through zones and derive nanmean
-for iz = 1:length(zonelist)
-	cz = zonelist(iz); %identify current zone
-	curzone = (zones==cz); %current domain
-	cVAR = nanmean(VAR(curzone(:)==1)); %mean value omitting NaNs
-	zVAR(curzone(:)==1)=(cVAR); %write into new file
-end
+zVAR(inzone) = zmean(zidx); %write into new file
 
 zVAR(mask) = NaN; %erase 0s outside mask
